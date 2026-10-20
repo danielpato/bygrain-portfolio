@@ -468,7 +468,7 @@ function build(){
   ring.appendChild(core);
   render();
 }
-const TILT=-15;let tilt=TILT,core=null,reveal=0,opened=false;const hint=document.getElementById("hint");
+const TILT=-15;let tilt=TILT,core=null,reveal=0,opened=false,zoom=1,zoomT=1;const hint=document.getElementById("hint");
 function setOpen(v){opened=v;hint.style.opacity=v?0:1;cards.forEach(c=>c.el.tabIndex=v?0:-1);if(reduce)reveal=v?1:0;tip.hidden=true}
 const NOISE="url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2.6 -.95'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
 function render(){
@@ -476,13 +476,13 @@ function render(){
   if(core)core.style.transform=`rotateY(${-angle}rad) rotateX(${-tilt}deg)`;
   for(const c of cards){
     const t=Math.min(1,Math.max(0,reveal*1.8-c.k*.8)),e=1-Math.pow(1-t,3);
-    c.el.style.transform=`rotateY(${c.theta}rad) translateZ(${(R+c.dz)*e}px) translateY(${c.y*e}px) scale(${.25+.75*e})`;
+    c.el.style.transform=`rotateY(${c.theta}rad) translateZ(${(R+c.dz)*e*zoom}px) translateY(${c.y*e*(.55+.45*zoom)}px) scale(${.25+.75*e})`;
     c.el.style.opacity=t.toFixed(3);c.el.style.pointerEvents=t>.9?"":"none";
     const z=Math.cos(c.theta+angle);c.shade.style.opacity=((1-z)/2*.78).toFixed(3);
   }
 }
 function loop(){
-  if(!dragging){ if(!paused) vel+= (auto-vel)*.02; else vel*=.92; angle+=vel; tilt+=(TILT-tilt)*.05; reveal+=((opened?1:0)-reveal)*.035; render(); }
+  if(!dragging){ if(!paused) vel+= (auto-vel)*.02; else vel*=.92; angle+=vel; tilt+=(TILT-tilt)*.05; zoom+=(zoomT-zoom)*.12; reveal+=((opened?1:0)-reveal)*.035; render(); }
   requestAnimationFrame(loop);
 }
 let dragging=false,startX=0,lastX=0,lastY=0,lastT=0,moved=0,downCard=null,downLogo=null;
@@ -510,7 +510,15 @@ function endDrag(e){
 }
 stage.addEventListener("pointerup",endDrag);stage.addEventListener("pointercancel",endDrag);
 stage.addEventListener("pointerleave",()=>{if(!dragging)tip.hidden=true});
-stage.addEventListener("wheel",e=>{if(Math.abs(e.deltaX)>Math.abs(e.deltaY)||e.shiftKey){e.preventDefault();vel-=(e.deltaX||e.deltaY)*.00025}},{passive:false});
+stage.addEventListener("wheel",e=>{e.preventDefault();
+  if(!e.ctrlKey&&Math.abs(e.deltaX)>Math.abs(e.deltaY)){vel-=e.deltaX*.00025;return}
+  const d=(e.deltaMode===1?e.deltaY*16:e.deltaY)*(e.ctrlKey?.01:.0012);
+  zoomT=Math.max(.78,Math.min(2,zoomT*Math.exp(-d)))},{passive:false});
+/* pinch to zoom on touch screens */
+const pts=new Map();let pinch0=0,zoom0=1;
+stage.addEventListener("pointerdown",e=>{if(e.pointerType!=="touch")return;pts.set(e.pointerId,[e.clientX,e.clientY]);if(pts.size===2){const[a,b]=[...pts.values()];pinch0=Math.hypot(a[0]-b[0],a[1]-b[1]);zoom0=zoomT}});
+stage.addEventListener("pointermove",e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,[e.clientX,e.clientY]);if(pts.size===2&&pinch0){const[a,b]=[...pts.values()];zoomT=Math.max(.78,Math.min(2,zoom0*Math.hypot(a[0]-b[0],a[1]-b[1])/pinch0));moved=99}});
+["pointerup","pointercancel"].forEach(t=>stage.addEventListener(t,e=>{pts.delete(e.pointerId);if(pts.size<2)pinch0=0}));
 stage.addEventListener("keydown",e=>{
   if(e.key==="ArrowLeft"){vel+=.03;e.preventDefault()}
   if(e.key==="ArrowRight"){vel-=.03;e.preventDefault()}

@@ -433,8 +433,8 @@ let cards=[],angle=0,vel=0,R=500,paused=reduce,auto=-0.0016;
 function build(){
   ring.innerHTML="";cards=[];
   const vw=stage.clientWidth,vh=window.innerHeight;
-  R=Math.max(220,Math.min(vw*.5,vh*1.0,1100));
-  const H=Math.max(240,Math.min(vh*.62,R*.82));
+  R=Math.max(200,Math.min(vw*.42,vh*.85,940));
+  const H=Math.max(220,Math.min(vh*.53,R*.82));
   stage.style.perspective=Math.round(R*2.7)+"px";
   /* columns like a contact sheet, but each column is staggered: its own height, start offset, gaps, widths and nudge */
   const r=rng(42),cols=vw<600?10:16,gap=vw<600?6:10,placed=[];

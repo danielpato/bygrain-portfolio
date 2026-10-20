@@ -64,14 +64,15 @@ nav a:hover{color:var(--paper)}
 @keyframes grain{0%{-webkit-mask-position:0 0;mask-position:0 0}12%{-webkit-mask-position:-47px 23px;mask-position:-47px 23px}25%{-webkit-mask-position:61px -38px;mask-position:61px -38px}37%{-webkit-mask-position:-19px -71px;mask-position:-19px -71px}50%{-webkit-mask-position:88px 54px;mask-position:88px 54px}62%{-webkit-mask-position:-73px 9px;mask-position:-73px 9px}75%{-webkit-mask-position:31px 82px;mask-position:31px 82px}87%{-webkit-mask-position:-102px -26px;mask-position:-102px -26px}}
 
 #hint{position:fixed;left:50%;bottom:calc(32px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);transition:opacity .6s;pointer-events:none;white-space:nowrap}
-#brand{position:fixed;z-index:37;top:calc(18px + env(safe-area-inset-top,0px));left:max(20px,env(safe-area-inset-left,0px));padding:6px;margin:-6px;background:none;border:0;cursor:pointer;opacity:.9;transition:opacity .2s,scale .2s}
+#brand{display:none!important;position:fixed;z-index:37;top:calc(18px + env(safe-area-inset-top,0px));left:max(20px,env(safe-area-inset-left,0px));padding:6px;margin:-6px;background:none;border:0;cursor:pointer;opacity:.9;transition:opacity .2s,scale .2s}
 #brand:hover{opacity:1;scale:1.05}
 #brand img{display:block;height:20px;width:auto;filter:drop-shadow(0 0 8px rgba(0,0,255,.5))}
 #site{position:fixed;inset:0;z-index:36;overflow-y:auto;overscroll-behavior:contain;background:color-mix(in srgb,var(--ink) 90%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);padding-top:env(safe-area-inset-top,0px);opacity:0;transition:opacity .4s}
 #site.open{opacity:1}
 .site-nav{display:flex;justify-content:flex-end;gap:20px;padding-block:20px 0}
 .site-nav a{text-decoration:none;font-size:14px;color:var(--mute)}
-.site-nav a:hover{color:var(--paper)}
+.site-nav a:hover,.site-close:hover{color:var(--paper)}
+.site-close{background:none;border:0;padding:0;margin-left:12px;font:inherit;font-size:14px;color:var(--mute);cursor:pointer}
 #site .hero{padding-block:48px 56px;border-bottom:1px solid var(--line)}
 html,body{height:100%}
 [hidden]{display:none!important}
@@ -197,7 +198,7 @@ dd{margin:0;font-size:15px}
   <div id="hint" hidden></div>
 <button id="brand" type="button" aria-expanded="false" aria-controls="site" aria-label="About byGRAIN"><img alt=""></button>
 <div id="site" hidden>
-  <nav class="wrap site-nav" aria-label="Sections"><a href="#index">Drops</a><a href="#studio">Studio</a><a href="#contact">Contact</a></nav>
+  <nav class="wrap site-nav" aria-label="Sections"><a href="#index">Drops</a><a href="#studio">Studio</a><a href="#contact">Contact</a><button type="button" class="site-close" id="siteClose">Close ✕</button></nav>
   <div class="wrap hero" id="work">
     <div class="hero-row">
       <h1>Welcome to <em>byGRAIN</em>. Uma casa de ideias que colabora com artistas.</h1>
@@ -465,7 +466,7 @@ function build(){
       cards.push({el:b,theta:q.x/R,y:q.y,dz:q.dz,k:k/placed.length,shade:b.lastChild});
   });
   core=document.createElement("div");core.id="core";
-  core.style.setProperty("--gw",(R*1.15)+"px");core.style.setProperty("--fs",(R*.6)+"px");core.style.setProperty("--noise",NOISE);core.style.setProperty("--specks",NOISE.replace("baseFrequency='.55'","baseFrequency='.8'").replace("2.6 -.95","5 -3.3"));
+  core.style.setProperty("--gw",(R*1.15)+"px");core.style.setProperty("--fs",(R*.54)+"px");core.style.setProperty("--noise",NOISE);core.style.setProperty("--specks",NOISE.replace("baseFrequency='.55'","baseFrequency='.8'").replace("2.6 -.95","5 -3.3"));
   core.innerHTML='<div class="glow soft"></div><div class="glow"></div><div class="glow specks"></div><img class="word" role="button" tabindex="0" draggable="false" alt="byGRAIN, open menu" src="'+LOGO+'">';
   ring.appendChild(core);
   render();
@@ -632,6 +633,7 @@ function setSite(v){
   else{site.classList.remove("open");setTimeout(()=>{if(!site.classList.contains("open"))site.hidden=true},reduce?0:400)}
 }
 brand.onclick=()=>setSite(site.hidden||!site.classList.contains("open"));
+document.getElementById("siteClose").onclick=()=>setSite(false);
 addEventListener("keydown",e=>{if(e.key==="Escape"&&proj.hidden&&!site.hidden)setSite(false)});
 
 /* boot */

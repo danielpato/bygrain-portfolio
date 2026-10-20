@@ -88,8 +88,9 @@ nav a:hover{color:var(--paper)}
 .hero h1 em{font-style:normal}
 .hero h1 sup.reg{font-size:.32em;vertical-align:baseline;position:relative;top:-1.75em;margin-left:.06em;font-variation-settings:"EXPO" 0}
 
-#core .gwrap{position:absolute;left:0;top:0;width:0;height:0;scale:var(--z,1)}
-#core .glow{position:absolute;left:50%;top:50%;width:calc(var(--gw)*1.7);height:calc(var(--gw)*.6);transform:translate(-50%,-50%);border-radius:50%;
+#flatGlow{position:absolute;left:50%;top:43%;width:0;height:0;pointer-events:none}
+.gscope .gwrap{position:absolute;left:0;top:0;width:0;height:0;scale:var(--z,1)}
+.gscope .glow{position:absolute;left:50%;top:50%;width:calc(var(--gw)*1.7);height:calc(var(--gw)*.6);transform:translate(-50%,-50%);border-radius:50%;
   background:radial-gradient(closest-side,rgba(40,40,255,.45),rgba(0,0,255,.22) 45%,rgba(0,0,255,0) 100%);
   -webkit-mask:var(--noise);mask:var(--noise);-webkit-mask-size:320px;mask-size:320px;filter:none;animation:breathe 6s ease-in-out infinite,grain .6s steps(1) infinite}
 @keyframes grain{0%{-webkit-mask-position:0 0;mask-position:0 0}12%{-webkit-mask-position:-47px 23px;mask-position:-47px 23px}25%{-webkit-mask-position:61px -38px;mask-position:61px -38px}37%{-webkit-mask-position:-19px -71px;mask-position:-19px -71px}50%{-webkit-mask-position:88px 54px;mask-position:88px 54px}62%{-webkit-mask-position:-73px 9px;mask-position:-73px 9px}75%{-webkit-mask-position:31px 82px;mask-position:31px 82px}87%{-webkit-mask-position:-102px -26px;mask-position:-102px -26px}}
@@ -110,11 +111,11 @@ html,body{height:100%}
 body{overflow:hidden}
 #core .word:hover,#core .word:focus-visible{scale:1.02;filter:drop-shadow(0 0 22px rgba(0,0,255,.75)) drop-shadow(0 0 4px rgba(160,160,255,.4))}
 #core .word:focus-visible{outline:none}
-#core .glow.specks{background:radial-gradient(closest-side,rgba(110,110,255,.95),rgba(0,0,255,.6) 50%,rgba(0,0,255,0) 90%);-webkit-mask:var(--specks);mask:var(--specks);-webkit-mask-size:260px;mask-size:260px;animation:breathe 6s ease-in-out infinite,grain .45s steps(1) infinite reverse}
-#core .glow.soft{-webkit-mask:none;mask:none;filter:blur(30px);opacity:.55}
+.gscope .glow.specks{background:radial-gradient(closest-side,rgba(110,110,255,.95),rgba(0,0,255,.6) 50%,rgba(0,0,255,0) 90%);-webkit-mask:var(--specks);mask:var(--specks);-webkit-mask-size:260px;mask-size:260px;animation:breathe 6s ease-in-out infinite,grain .45s steps(1) infinite reverse}
+.gscope .glow.soft{-webkit-mask:none;mask:none;filter:blur(30px);opacity:.55}
 #core .word{pointer-events:auto;cursor:pointer;transition:scale .3s ease,filter .3s ease;position:absolute;left:50%;top:50%;translate:-50% -50%;transform-origin:50% 50%;width:var(--fs);max-width:none;height:auto;filter:drop-shadow(0 0 18px rgba(0,0,255,.4)) drop-shadow(0 0 3px rgba(120,120,255,.2))}
 @keyframes breathe{0%,100%{opacity:.85;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}}
-@media (prefers-reduced-motion:reduce){#core .glow{animation:none}}
+@media (prefers-reduced-motion:reduce){.gscope .glow{animation:none}}
 .card{position:absolute;left:0;top:0;padding:0;border:0;background:var(--ink-2);cursor:pointer;transform-style:preserve-3d;overflow:hidden}
 .card img{display:block;width:100%;height:100%;max-width:none;object-fit:cover;pointer-events:none;background:var(--ink-2)}
 .card .shade{position:absolute;inset:0;background:#000;pointer-events:none}
@@ -189,7 +190,9 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 #proj{position:fixed;inset:0;z-index:40;background:color-mix(in srgb,var(--ink) 94%,transparent);backdrop-filter:blur(14px);overflow-y:auto;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);opacity:0;transition:opacity .3s}
 #proj.open{opacity:1}
 #proj .wrap{padding-block:20px 60px}
-.proj-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:24px}
+.proj-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+.proj-bar .icon-btn{white-space:nowrap}
+@media (max-width:600px){.proj-bar{position:sticky;top:0;z-index:2;margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px))) 16px;padding:10px max(16px,env(safe-area-inset-left,0px));background:color-mix(in srgb,var(--ink) 88%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}.proj-bar .label{font-size:11px}.proj-bar .nav{gap:6px}.proj-bar .icon-btn{padding:6px 11px;font-size:11px}#proj .wrap{padding-top:0}.proj-hero{aspect-ratio:16/10}.proj-body{margin-top:24px}.proj-body h2{font-size:clamp(34px,10vw,48px)}.proj-cta{margin-top:28px}}
 .proj-bar .nav{display:flex;gap:8px}
 .proj-hero{width:100%;aspect-ratio:16/9;max-height:72vh;max-width:100%;border-radius:4px;overflow:hidden;background:var(--ink-2);transform:scale(.97);transition:transform .5s cubic-bezier(.2,.8,.2,1)}
 #proj.open .proj-hero{transform:none}
@@ -474,11 +477,13 @@ let cards=[],angle=0,vel=0,R=500,paused=reduce,auto=-0.0016;
 function build(){
   ring.innerHTML="";cards=[];
   const vw=stage.clientWidth,vh=window.innerHeight;
-  R=Math.max(180,Math.min(vw*.378,vh*.765,846));
-  const H=Math.max(200,Math.min(vh*.477,R*.82));
+  const narrow=vw<600;TILT=narrow?-34:-15;
+  R=narrow?Math.min(vw*.66,vh*.42):Math.max(180,Math.min(vw*.378,vh*.765,846));
+  coreZ=0;tilt=TILT;
+  const H=narrow?Math.min(vh*.3,R*.85):Math.max(200,Math.min(vh*.477,R*.82));
   stage.style.perspective=Math.round(R*2.7)+"px";
   /* columns like a contact sheet, but each column is staggered: its own height, start offset, gaps, widths and nudge */
-  const r=rng(42),cols=vw<600?10:16,gap=vw<600?6:10,placed=[];
+  const r=rng(42),cols=narrow?9:16,gap=narrow?6:10,placed=[];
   const weights=Array.from({length:cols},()=>.7+r()*.8),sum=weights.reduce((a,b)=>a+b,0);
   let acc=0;
   for(let i=0;i<cols;i++){
@@ -507,17 +512,23 @@ function build(){
       cards.push({el:b,theta:q.x/R,y:q.y,dz:q.dz,k:k/placed.length,shade:b.lastChild});
   });
   core=document.createElement("div");core.id="core";
-  core.style.setProperty("--gw",(R*1.15)+"px");core.style.setProperty("--fs",(R*.54)+"px");core.style.setProperty("--noise",NOISE);core.style.setProperty("--specks",NOISE.replace("baseFrequency='.55'","baseFrequency='.8'").replace("2.6 -.95","5 -3.3"));
+  core.style.setProperty("--gw",(R*(narrow?.82:1.15))+"px");core.style.setProperty("--fs",(R*(narrow?.62:.54))+"px");core.style.setProperty("--noise",NOISE);core.style.setProperty("--specks",NOISE.replace("baseFrequency='.55'","baseFrequency='.8'").replace("2.6 -.95","5 -3.3"));
   core.innerHTML='<div class="gwrap"><div class="glow soft"></div><div class="glow"></div><div class="glow specks"></div></div><canvas class="word" role="button" tabindex="0" aria-label="byGrain©, open menu"></canvas>';
+  core.classList.add("gscope");
+  /* phones: draw the glow as a flat light behind the ring so steep tilts can't slice it through the frames */
+  let fg=document.getElementById("flatGlow");if(fg)fg.remove();flatGlow=null;
+  if(narrow){const gw=core.querySelector(".gwrap");fg=document.createElement("div");fg.id="flatGlow";fg.className="gscope";fg.setAttribute("aria-hidden","true");
+    ["--gw","--noise","--specks"].forEach(k=>fg.style.setProperty(k,core.style.getPropertyValue(k)));fg.appendChild(gw);stage.insertBefore(fg,ring);flatGlow=fg}
   ring.appendChild(core);logoCv=core.querySelector(".word");logoW=0;if(typeof drawLogo==="function")requestAnimationFrame(()=>drawLogo(performance.now()));
   render();
 }
-const TILT=-15;let tilt=TILT,core=null,reveal=0,opened=false,zoom=1,zoomT=1;const hint=document.getElementById("hint");
+let TILT=-15,coreZ=0,flatGlow=null;let tilt=TILT,core=null,reveal=0,opened=false,zoom=1,zoomT=1;const hint=document.getElementById("hint");
 function setOpen(v){opened=v;hint.style.opacity=v?0:1;cards.forEach(c=>c.el.tabIndex=v?0:-1);if(reduce)reveal=v?1:0;tip.hidden=true}
 const NOISE="url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2.6 -.95'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
 function render(){
   ring.style.transform=`translateZ(${-R*1.05}px) rotateX(${tilt}deg) rotateY(${angle}rad)`;
-  if(core){core.style.transform=`rotateY(${-angle}rad) rotateX(${-tilt}deg)`;core.style.setProperty("--z",zoom.toFixed(3))}
+  if(core){core.style.transform=`rotateY(${-angle}rad) rotateX(${-tilt}deg) translateZ(${coreZ}px)`;core.style.setProperty("--z",zoom.toFixed(3))}
+  if(flatGlow&&logoCv){const b=logoCv.getBoundingClientRect(),sr=stage.getBoundingClientRect();flatGlow.style.left=(b.left+b.width/2-sr.left)+"px";flatGlow.style.top=(b.top+b.height/2-sr.top)+"px";flatGlow.style.setProperty("--z",zoom.toFixed(3))}
   for(const c of cards){
     const t=Math.min(1,Math.max(0,reveal*1.8-c.k*.8)),e=1-Math.pow(1-t,3);
     c.el.style.transform=`rotateY(${c.theta}rad) translateZ(${(R+c.dz)*e*zoom}px) translateY(${c.y*e*(zoom<1?zoom:.55+.45*zoom)}px) scale(${(.25+.75*e)*Math.min(1,zoom)})`;
@@ -538,7 +549,7 @@ stage.addEventListener("pointerdown",e=>{
 stage.addEventListener("pointermove",e=>{
   if(dragging){
     const dx=e.clientX-lastX,dy=e.clientY-lastY,now=performance.now();moved+=Math.abs(dx)+Math.abs(dy);
-    tilt=Math.max(-45,Math.min(6,tilt-dy*.12));lastY=e.clientY;
+    tilt=Math.max(-50,Math.min(6,tilt-dy*.12));lastY=e.clientY;
     const d=dx/(R*1.6);angle+=d;vel=d/Math.max(1,(now-lastT)/16);lastX=e.clientX;lastT=now;render();
     if(moved>6)tip.hidden=true;
   }else{

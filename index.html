@@ -476,7 +476,7 @@ function render(){
   if(core)core.style.transform=`rotateY(${-angle}rad) rotateX(${-tilt}deg)`;
   for(const c of cards){
     const t=Math.min(1,Math.max(0,reveal*1.8-c.k*.8)),e=1-Math.pow(1-t,3);
-    c.el.style.transform=`rotateY(${c.theta}rad) translateZ(${(R+c.dz)*e*zoom}px) translateY(${c.y*e*(.55+.45*zoom)}px) scale(${.25+.75*e})`;
+    c.el.style.transform=`rotateY(${c.theta}rad) translateZ(${(R+c.dz)*e*zoom}px) translateY(${c.y*e*(zoom<1?zoom:.55+.45*zoom)}px) scale(${(.25+.75*e)*Math.min(1,zoom)})`;
     c.el.style.opacity=t.toFixed(3);c.el.style.pointerEvents=t>.9?"":"none";
     const z=Math.cos(c.theta+angle);c.shade.style.opacity=((1-z)/2*.78).toFixed(3);
   }
@@ -513,11 +513,11 @@ stage.addEventListener("pointerleave",()=>{if(!dragging)tip.hidden=true});
 stage.addEventListener("wheel",e=>{e.preventDefault();
   if(!e.ctrlKey&&Math.abs(e.deltaX)>Math.abs(e.deltaY)){vel-=e.deltaX*.00025;return}
   const d=(e.deltaMode===1?e.deltaY*16:e.deltaY)*(e.ctrlKey?.01:.0012);
-  zoomT=Math.max(.78,Math.min(2,zoomT*Math.exp(-d)))},{passive:false});
+  zoomT=Math.max(.5,Math.min(2,zoomT*Math.exp(-d)))},{passive:false});
 /* pinch to zoom on touch screens */
 const pts=new Map();let pinch0=0,zoom0=1;
 stage.addEventListener("pointerdown",e=>{if(e.pointerType!=="touch")return;pts.set(e.pointerId,[e.clientX,e.clientY]);if(pts.size===2){const[a,b]=[...pts.values()];pinch0=Math.hypot(a[0]-b[0],a[1]-b[1]);zoom0=zoomT}});
-stage.addEventListener("pointermove",e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,[e.clientX,e.clientY]);if(pts.size===2&&pinch0){const[a,b]=[...pts.values()];zoomT=Math.max(.78,Math.min(2,zoom0*Math.hypot(a[0]-b[0],a[1]-b[1])/pinch0));moved=99}});
+stage.addEventListener("pointermove",e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,[e.clientX,e.clientY]);if(pts.size===2&&pinch0){const[a,b]=[...pts.values()];zoomT=Math.max(.5,Math.min(2,zoom0*Math.hypot(a[0]-b[0],a[1]-b[1])/pinch0));moved=99}});
 ["pointerup","pointercancel"].forEach(t=>stage.addEventListener(t,e=>{pts.delete(e.pointerId);if(pts.size<2)pinch0=0}));
 stage.addEventListener("keydown",e=>{
   if(e.key==="ArrowLeft"){vel+=.03;e.preventDefault()}

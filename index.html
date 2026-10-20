@@ -649,12 +649,13 @@ function sizeLogo(){
 }
 function drawLogo(t){
   if(!logoCv)return;if(!logoW&&!sizeLogo())return;
-  t/=1000;const d=fdata.data;
+  t=reduce?0:t/1000;const d=fdata.data;
   for(let j=0;j<FH;j++)for(let i=0;i<FW;i++){
     const u=i/(FW-1)*3.2,v=j/(FH-1);
-    let n=Math.sin(u*1.9+t*.55)+Math.sin(v*4.2-t*.8+u*.7)+.8*Math.sin((u-v*1.5)*2.3+t*.42)+.6*Math.sin(Math.hypot(u-1.6+Math.sin(t*.2),v-.5)*5.5-t*.9);
-    n=Math.max(-1,Math.min(1,n/2.4));
-    const k=(j*FW+i)*4;d[k]=d[k+1]=d[k+2]=255;d[k+3]=Math.round((.65+.15*n)*255);
+    let n=Math.sin(u*3.4+t*.55)+Math.sin(v*6.5-t*.8+u*1.6)+.8*Math.sin((u-v*1.8)*3.1+t*.42)+.7*Math.sin(Math.hypot(u-1.6+Math.sin(t*.2)*.8,v-.5)*9-t*.9);
+    n=Math.max(-1,Math.min(1,n/1.9));n=Math.sign(n)*Math.pow(Math.abs(n),.45);
+    const a=.65+.15*n;
+    const k=(j*FW+i)*4;d[k]=d[k+1]=d[k+2]=255;d[k+3]=Math.round((a+(1-a)*logoHov)*255);
   }
   fctx.putImageData(fdata,0,0);
   const x=logoCv.getContext("2d"),w=logoCv.width,h=logoCv.height;
@@ -662,9 +663,13 @@ function drawLogo(t){
   x.globalCompositeOperation="destination-in";x.imageSmoothingEnabled=true;x.imageSmoothingQuality="high";x.drawImage(field,0,0,w,h);
   x.globalCompositeOperation="source-over";
 }
-let lastLogo=0;
-function logoLoop(t){if(!pageHidden&&t-lastLogo>33){lastLogo=t;drawLogo(t)}if(!reduce)requestAnimationFrame(logoLoop)}
-logoImg.onload=()=>{logoW=0;drawLogo(performance.now());requestAnimationFrame(logoLoop)};
+let lastLogo=0,logoHov=0,logoHovT=0;
+document.addEventListener("pointerover",e=>{if(e.target.closest&&e.target.closest("#core .word"))logoHovT=1});
+document.addEventListener("pointerout",e=>{if(e.target.closest&&e.target.closest("#core .word"))logoHovT=0});
+document.addEventListener("focusin",e=>{if(e.target.matches&&e.target.matches("#core .word"))logoHovT=1});
+document.addEventListener("focusout",e=>{if(e.target.matches&&e.target.matches("#core .word"))logoHovT=0});
+function logoLoop(t){if(!pageHidden&&t-lastLogo>33){lastLogo=t;logoHov+=(logoHovT-logoHov)*.18;if(Math.abs(logoHovT-logoHov)<.005)logoHov=logoHovT;drawLogo(t)}requestAnimationFrame(logoLoop)}
+logoImg.onload=()=>{logoW=0;drawLogo(reduce?0:performance.now());requestAnimationFrame(logoLoop)};
 
 /* boot */
 let pageHidden=document.hidden;document.addEventListener("visibilitychange",()=>{pageHidden=document.hidden;render()});

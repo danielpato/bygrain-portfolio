@@ -80,7 +80,7 @@ body{overflow:hidden}
 #core .word:focus-visible{outline:none}
 #core .glow.specks{background:radial-gradient(closest-side,rgba(110,110,255,.95),rgba(0,0,255,.6) 50%,rgba(0,0,255,0) 90%);-webkit-mask:var(--specks);mask:var(--specks);-webkit-mask-size:260px;mask-size:260px;animation:breathe 6s ease-in-out infinite,grain .45s steps(1) infinite reverse}
 #core .glow.soft{-webkit-mask:none;mask:none;filter:blur(30px);opacity:.55}
-#core .word{pointer-events:auto;cursor:pointer;transition:scale .3s ease,filter .3s ease;left:50%;top:50%;transform:translate(-50%,-50%);width:var(--fs);max-width:none;height:auto;filter:drop-shadow(0 0 18px rgba(0,0,255,.4)) drop-shadow(0 0 3px rgba(120,120,255,.2))}
+#core .word{pointer-events:auto;cursor:pointer;transition:scale .3s ease,filter .3s ease;position:absolute;left:50%;top:50%;translate:-50% -50%;transform-origin:50% 50%;width:var(--fs);max-width:none;height:auto;filter:drop-shadow(0 0 18px rgba(0,0,255,.4)) drop-shadow(0 0 3px rgba(120,120,255,.2))}
 @keyframes breathe{0%,100%{opacity:.85;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}}
 @media (prefers-reduced-motion:reduce){#core .glow{animation:none}}
 .card{position:absolute;left:0;top:0;padding:0;border:0;background:var(--ink-2);cursor:pointer;transform-style:preserve-3d;overflow:hidden}

@@ -675,10 +675,12 @@ function drawLogo(t){
   if(gs>.01){
     if(!grainPats)grainPats=GRAIN.map(c=>x.createPattern(c,"repeat"));
     const dpr=Math.min(2,devicePixelRatio||1),sc=Math.max(1,dpr*.5),now=performance.now();
-    if(now-grainAt>160){grainAt=now;grainPick=(grainPick+1+((Math.random()*(grainPats.length-1))|0))%grainPats.length;grainOx=Math.random()*128;grainOy=Math.random()*128}
-    const pat=grainPats[grainPick];
-    x.save();x.globalCompositeOperation="destination-out";x.globalAlpha=gs;
-    x.setTransform(sc,0,0,sc,-grainOx*sc,-grainOy*sc);x.fillStyle=pat;x.fillRect(0,0,w/sc+256,h/sc+256);x.restore();
+    if(!gA){gA=newGrain();gB=newGrain();grainAt=now}
+    let p=(now-grainAt)/GRAIN_MS;if(p>=1){gA=gB;gB=newGrain();grainAt=now;p=0}
+    p=p*p*(3-2*p); /* smoothstep crossfade between two grain fields */
+    x.save();x.globalCompositeOperation="destination-out";
+    for(const [g,a] of [[gA,1-p],[gB,p]]){if(a<.01)continue;x.globalAlpha=gs*a;x.setTransform(sc,0,0,sc,-g.ox*sc,-g.oy*sc);x.fillStyle=grainPats[g.i];x.fillRect(0,0,w/sc+256,h/sc+256)}
+    x.restore();
   }
   if(logoHov>.001&&logoSolid){x.globalAlpha=logoHov;x.drawImage(logoSolid,0,0,w,h);x.globalAlpha=1}
 }
@@ -686,12 +688,13 @@ let lastLogo=0,logoHov=0,logoHovT=0;
 /* film grain: a few random noise tiles, swapped and shifted every frame */
 const GRAIN=[0,1,2,3].map(()=>{const c=document.createElement("canvas");c.width=c.height=128;const g=c.getContext("2d"),im=g.createImageData(128,128),dd=im.data;
   for(let k=0;k<dd.length;k+=4){const r=Math.random();dd[k]=dd[k+1]=dd[k+2]=0;dd[k+3]=r>.55?Math.round(((r-.55)/.45)**1.4*255):0}g.putImageData(im,0,0);return c});
-let grainPats=null,grainPick=0,grainOx=0,grainOy=0,grainAt=-1e9;
+let grainPats=null,gA=null,gB=null,grainAt=-1e9;const GRAIN_MS=260;
+const newGrain=()=>({i:(Math.random()*4)|0,ox:Math.random()*128,oy:Math.random()*128});
 document.addEventListener("pointerover",e=>{if(e.target.closest&&e.target.closest("#core .word"))logoHovT=1});
 document.addEventListener("pointerout",e=>{if(e.target.closest&&e.target.closest("#core .word"))logoHovT=0});
 document.addEventListener("focusin",e=>{if(e.target.matches&&e.target.matches("#core .word"))logoHovT=1});
 document.addEventListener("focusout",e=>{if(e.target.matches&&e.target.matches("#core .word"))logoHovT=0});
-function logoLoop(t){if(!pageHidden&&t-lastLogo>33){lastLogo=t;logoHov+=(logoHovT-logoHov)*.18;if(Math.abs(logoHovT-logoHov)<.005)logoHov=logoHovT;drawLogo(t)}requestAnimationFrame(logoLoop)}
+function logoLoop(t){if(!pageHidden&&t-lastLogo>15){lastLogo=t;logoHov+=(logoHovT-logoHov)*.18;if(Math.abs(logoHovT-logoHov)<.005)logoHov=logoHovT;drawLogo(t)}requestAnimationFrame(logoLoop)}
 logoImg.onload=()=>{logoW=0;drawLogo(reduce?0:performance.now());requestAnimationFrame(logoLoop)};
 
 /* boot */

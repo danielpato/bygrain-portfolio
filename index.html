@@ -76,9 +76,11 @@ nav a:hover{color:var(--paper)}
 html,body{height:100%}
 [hidden]{display:none!important}
 body{overflow:hidden}
+#core .word:hover,#core .word:focus-visible{scale:1.05;filter:drop-shadow(0 0 22px rgba(0,0,255,.75)) drop-shadow(0 0 4px rgba(160,160,255,.4))}
+#core .word:focus-visible{outline:none}
 #core .glow.specks{background:radial-gradient(closest-side,rgba(110,110,255,.95),rgba(0,0,255,.6) 50%,rgba(0,0,255,0) 90%);-webkit-mask:var(--specks);mask:var(--specks);-webkit-mask-size:260px;mask-size:260px;animation:breathe 6s ease-in-out infinite,grain .45s steps(1) infinite reverse}
 #core .glow.soft{-webkit-mask:none;mask:none;filter:blur(30px);opacity:.55}
-#core .word{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:var(--fs);max-width:none;height:auto;filter:drop-shadow(0 0 18px rgba(0,0,255,.4)) drop-shadow(0 0 3px rgba(120,120,255,.2))}
+#core .word{pointer-events:auto;cursor:pointer;transition:scale .3s ease,filter .3s ease;left:50%;top:50%;transform:translate(-50%,-50%);width:var(--fs);max-width:none;height:auto;filter:drop-shadow(0 0 18px rgba(0,0,255,.4)) drop-shadow(0 0 3px rgba(120,120,255,.2))}
 @keyframes breathe{0%,100%{opacity:.85;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}}
 @media (prefers-reduced-motion:reduce){#core .glow{animation:none}}
 .card{position:absolute;left:0;top:0;padding:0;border:0;background:var(--ink-2);cursor:pointer;transform-style:preserve-3d;overflow:hidden}
@@ -464,7 +466,7 @@ function build(){
   });
   core=document.createElement("div");core.id="core";
   core.style.setProperty("--gw",(R*1.15)+"px");core.style.setProperty("--fs",(R*.6)+"px");core.style.setProperty("--noise",NOISE);core.style.setProperty("--specks",NOISE.replace("baseFrequency='.55'","baseFrequency='.8'").replace("2.6 -.95","5 -3.3"));
-  core.innerHTML='<div class="glow soft"></div><div class="glow"></div><div class="glow specks"></div><img class="word" draggable="false" alt="byGRAIN" src="'+LOGO+'">';
+  core.innerHTML='<div class="glow soft"></div><div class="glow"></div><div class="glow specks"></div><img class="word" role="button" tabindex="0" draggable="false" alt="byGRAIN, open menu" src="'+LOGO+'">';
   ring.appendChild(core);
   render();
 }
@@ -506,6 +508,7 @@ stage.addEventListener("pointermove",e=>{
 function endDrag(e){
   if(!dragging)return;dragging=false;stage.classList.remove("dragging");
   if(moved<6&&downCard){vel=0;NAV=RING.slice();openProject(+downCard.dataset.p,downCard)}
+  else if(moved<6&&downLogo)setSite(true);
   downCard=null;downLogo=null;
 }
 stage.addEventListener("pointerup",endDrag);stage.addEventListener("pointercancel",endDrag);
@@ -522,6 +525,7 @@ stage.addEventListener("pointermove",e=>{if(!pts.has(e.pointerId))return;pts.set
 stage.addEventListener("keydown",e=>{
   if(e.key==="ArrowLeft"){vel+=.03;e.preventDefault()}
   if(e.key==="ArrowRight"){vel-=.03;e.preventDefault()}
+  if((e.key==="Enter"||e.key===" ")&&e.target.classList.contains("word")){setSite(true);e.preventDefault()}
 });
 stage.addEventListener("click",e=>{ // keyboard activation of a focused card
   if(e.detail===0){const c=e.target.closest(".card");if(c){NAV=RING.slice();openProject(+c.dataset.p,c)}}

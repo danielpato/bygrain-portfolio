@@ -470,6 +470,7 @@ const pic=p=>p.m?LOOPS[p.m]:THUMBS[p.yt];
 
 function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 /* ---------- ring ---------- */
+const pts=new Map();let pinch0=0,zoom0=1;
 const RING=PROJECTS.map((p,i)=>p.main?i:-1).filter(i=>i>=0);
 const stage=document.getElementById("stage"),ring=document.getElementById("ring"),tip=document.getElementById("tip");
 const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -537,17 +538,22 @@ function render(){
   }
 }
 function loop(){
-  if(!dragging){ if(!paused) vel+= (auto-vel)*.02; else vel*=.92; angle+=vel; tilt+=(TILT-tilt)*.05; zoom+=(zoomT-zoom)*.12; reveal+=((opened?1:0)-reveal)*.035; render(); }
+  const dz=zoomT-zoom;zoom+=dz*(pinch0?.35:.12);
+  if(!dragging){ if(!paused) vel+= (auto-vel)*.02; else vel*=.92; angle+=vel; tilt+=(TILT-tilt)*.05; reveal+=((opened?1:0)-reveal)*.035; render(); }
+  else if(Math.abs(dz)>.0005)render();
   requestAnimationFrame(loop);
 }
 let dragging=false,startX=0,lastX=0,lastY=0,lastT=0,moved=0,downCard=null,downLogo=null;
 stage.addEventListener("pointerdown",e=>{
+  if(e.pointerType==="touch"&&pts.size>=1){vel=0;moved=99;downCard=downLogo=null;return} /* second finger: a pinch, not a new drag */
   dragging=true;moved=0;startX=lastX=e.clientX;lastY=e.clientY;lastT=performance.now();
   downCard=e.target.closest(".card");downLogo=e.target.closest(".word");stage.classList.add("dragging");
   stage.setPointerCapture(e.pointerId);
 });
 stage.addEventListener("pointermove",e=>{
   if(dragging){
+    if(pts.size>=2)return; /* pinching: don't spin or tilt */
+    if(e.pointerType==="touch"&&pts.size===1&&!pts.has(e.pointerId))return;
     const dx=e.clientX-lastX,dy=e.clientY-lastY,now=performance.now();moved+=Math.abs(dx)+Math.abs(dy);
     tilt=Math.max(-50,Math.min(6,tilt-dy*.12));lastY=e.clientY;
     const d=dx/(R*1.6);angle+=d;vel=d/Math.max(1,(now-lastT)/16);lastX=e.clientX;lastT=now;render();
@@ -559,7 +565,8 @@ stage.addEventListener("pointermove",e=>{
   }
 });
 function endDrag(e){
-  if(!dragging)return;dragging=false;stage.classList.remove("dragging");
+  if(!dragging)return;
+  if(e&&e.pointerType==="touch"&&pts.size>1)return; /* a finger lifted mid-pinch: keep going with the other */dragging=false;stage.classList.remove("dragging");
   if(moved<6&&downCard){vel=0;NAV=RING.slice();openProject(+downCard.dataset.p,downCard)}
   else if(moved<6&&downLogo)setSite(true);
   downCard=null;downLogo=null;
@@ -571,10 +578,11 @@ stage.addEventListener("wheel",e=>{e.preventDefault();
   const d=(e.deltaMode===1?e.deltaY*16:e.deltaY)*(e.ctrlKey?.01:.0012);
   zoomT=Math.max(.5,Math.min(2,zoomT*Math.exp(-d)))},{passive:false});
 /* pinch to zoom on touch screens */
-const pts=new Map();let pinch0=0,zoom0=1;
+
 stage.addEventListener("pointerdown",e=>{if(e.pointerType!=="touch")return;pts.set(e.pointerId,[e.clientX,e.clientY]);if(pts.size===2){const[a,b]=[...pts.values()];pinch0=Math.hypot(a[0]-b[0],a[1]-b[1]);zoom0=zoomT}});
 stage.addEventListener("pointermove",e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,[e.clientX,e.clientY]);if(pts.size===2&&pinch0){const[a,b]=[...pts.values()];zoomT=Math.max(.5,Math.min(2,zoom0*Math.hypot(a[0]-b[0],a[1]-b[1])/pinch0));moved=99}});
-["pointerup","pointercancel"].forEach(t=>stage.addEventListener(t,e=>{pts.delete(e.pointerId);if(pts.size<2)pinch0=0}));
+["pointerup","pointercancel"].forEach(t=>stage.addEventListener(t,e=>{pts.delete(e.pointerId);if(pts.size<2)pinch0=0;
+  if(pts.size===1&&dragging){const[x,y]=[...pts.values()][0];lastX=x;lastY=y;lastT=performance.now();vel=0}}));
 stage.addEventListener("keydown",e=>{
   if(e.key==="ArrowLeft"){vel+=.03;e.preventDefault()}
   if(e.key==="ArrowRight"){vel-=.03;e.preventDefault()}
@@ -762,6 +770,7 @@ logoImg.onload=()=>{logoW=0;drawLogo(reduce?0:performance.now());requestAnimatio
   dock.addEventListener("mouseleave",()=>items.forEach(it=>it.style.setProperty("--s",1)));
 })();
 
+["gesturestart","gesturechange"].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false})); /* iOS: keep pinches for the ring */
 /* boot */
 let pageHidden=document.hidden;document.addEventListener("visibilitychange",()=>{pageHidden=document.hidden;render()});
 build();setOpen(true);requestAnimationFrame(loop);

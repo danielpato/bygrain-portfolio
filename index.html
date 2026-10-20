@@ -467,8 +467,8 @@ function build(){
   });
   core=document.createElement("div");core.id="core";
   core.style.setProperty("--gw",(R*1.15)+"px");core.style.setProperty("--fs",(R*.54)+"px");core.style.setProperty("--noise",NOISE);core.style.setProperty("--specks",NOISE.replace("baseFrequency='.55'","baseFrequency='.8'").replace("2.6 -.95","5 -3.3"));
-  core.innerHTML='<div class="glow soft"></div><div class="glow"></div><div class="glow specks"></div><img class="word" role="button" tabindex="0" draggable="false" alt="byGRAIN, open menu" src="'+LOGO+'">';
-  ring.appendChild(core);
+  core.innerHTML='<div class="glow soft"></div><div class="glow"></div><div class="glow specks"></div><canvas class="word" role="button" tabindex="0" aria-label="byGRAIN, open menu"></canvas>';
+  ring.appendChild(core);logoCv=core.querySelector(".word");logoW=0;if(typeof drawLogo==="function")requestAnimationFrame(()=>drawLogo(performance.now()));
   render();
 }
 const TILT=-15;let tilt=TILT,core=null,reveal=0,opened=false,zoom=1,zoomT=1;const hint=document.getElementById("hint");
@@ -635,6 +635,36 @@ function setSite(v){
 brand.onclick=()=>setSite(site.hidden||!site.classList.contains("open"));
 document.getElementById("siteClose").onclick=()=>setSite(false);
 addEventListener("keydown",e=>{if(e.key==="Escape"&&proj.hidden&&!site.hidden)setSite(false)});
+
+
+/* ---------- centre logo: flowing opacity waves (50%–80%) ---------- */
+let logoCv=null,logoW=0;const logoImg=new Image();logoImg.src=LOGO;
+const FW=64,FH=20,field=document.createElement("canvas");field.width=FW;field.height=FH;
+const fctx=field.getContext("2d"),fdata=fctx.createImageData(FW,FH);
+function sizeLogo(){
+  if(!logoCv||!logoImg.naturalWidth)return false;
+  const W=logoCv.getBoundingClientRect().width/(parseFloat(getComputedStyle(logoCv).scale)||1)||parseFloat(getComputedStyle(logoCv).width)||280;
+  const dpr=Math.min(2,devicePixelRatio||1);logoW=Math.round(W*dpr);
+  logoCv.width=logoW;logoCv.height=Math.round(logoW*logoImg.naturalHeight/logoImg.naturalWidth);return true;
+}
+function drawLogo(t){
+  if(!logoCv)return;if(!logoW&&!sizeLogo())return;
+  t/=1000;const d=fdata.data;
+  for(let j=0;j<FH;j++)for(let i=0;i<FW;i++){
+    const u=i/(FW-1)*3.2,v=j/(FH-1);
+    let n=Math.sin(u*1.9+t*.55)+Math.sin(v*4.2-t*.8+u*.7)+.8*Math.sin((u-v*1.5)*2.3+t*.42)+.6*Math.sin(Math.hypot(u-1.6+Math.sin(t*.2),v-.5)*5.5-t*.9);
+    n=Math.max(-1,Math.min(1,n/2.4));
+    const k=(j*FW+i)*4;d[k]=d[k+1]=d[k+2]=255;d[k+3]=Math.round((.65+.15*n)*255);
+  }
+  fctx.putImageData(fdata,0,0);
+  const x=logoCv.getContext("2d"),w=logoCv.width,h=logoCv.height;
+  x.globalCompositeOperation="source-over";x.clearRect(0,0,w,h);x.drawImage(logoImg,0,0,w,h);
+  x.globalCompositeOperation="destination-in";x.imageSmoothingEnabled=true;x.imageSmoothingQuality="high";x.drawImage(field,0,0,w,h);
+  x.globalCompositeOperation="source-over";
+}
+let lastLogo=0;
+function logoLoop(t){if(!pageHidden&&t-lastLogo>33){lastLogo=t;drawLogo(t)}if(!reduce)requestAnimationFrame(logoLoop)}
+logoImg.onload=()=>{logoW=0;drawLogo(performance.now());requestAnimationFrame(logoLoop)};
 
 /* boot */
 let pageHidden=document.hidden;document.addEventListener("visibilitychange",()=>{pageHidden=document.hidden;render()});

@@ -727,14 +727,16 @@ let logoCv=null,logoW=0,logoSolid=null,haloCv=null,haloP=0,haloAt=0,haloR=0,prox
 function drawHalo(now){
   if(!haloCv||!logoSolid||!haloCv.width)return;
   prox+=(Math.max(proxT,logoHov)-prox)*.12;
-  const target=haloP*(.12+.85*prox);haloR+=(target-haloR)*.2;
+  const target=haloP*(.12+.7*prox);haloR+=(target-haloR)*.2;
   if(now-haloAt<70&&!reduce)return;haloAt=now;
   const W=haloCv.width,H=haloCv.height,t=haloTmp.getContext("2d",{willReadFrequently:true});
-  t.clearRect(0,0,W,H);t.filter=`blur(${Math.max(.5,haloR*.55).toFixed(1)}px)`;
-  for(let k=0;k<3;k++)t.drawImage(logoSolid,haloP,haloP,logoCv.width,logoCv.height);
+  t.clearRect(0,0,W,H);t.filter=`blur(${Math.max(.5,haloR*.32).toFixed(1)}px)`;
+  for(let k=0;k<2;k++)t.drawImage(logoSolid,haloP,haloP,logoCv.width,logoCv.height);
   t.filter="none";
   const im=t.getImageData(0,0,W,H),d=im.data,gain=.55+.45*prox;
-  for(let i=0;i<d.length;i+=4){const a=d[i+3]/255*gain;if(a>0&&Math.random()<a){d[i]=150;d[i+1]=165;d[i+2]=255;d[i+3]=Math.round(140+115*a)}else d[i+3]=0}
+  const edge=haloP*.45;
+  for(let i=0;i<d.length;i+=4){const px=(i>>2)%W,py=(i>>2)/W|0,e=Math.min(1,Math.min(px,py,W-1-px,H-1-py)/edge); /* fade out before the canvas edge */
+    const a=d[i+3]/255*gain*e*e;if(a>0&&Math.random()<a){d[i]=150;d[i+1]=165;d[i+2]=255;d[i+3]=Math.round(140+115*a)}else d[i+3]=0}
   const h=haloCv.getContext("2d");h.clearRect(0,0,W,H);h.putImageData(im,0,0);
 }const logoImg=new Image();logoImg.src=LOGO;
 const FW=64,FH=20,field=document.createElement("canvas");field.width=FW;field.height=FH;
@@ -803,7 +805,7 @@ if(matchMedia("(hover:hover) and (pointer:fine)").matches&&!reduce){
 }
 function logoLoop(t){
   lookX+=(lookTX-lookX)*.08;lookY+=(lookTY-lookY)*.08;
-  if(logoCv){const tf=`perspective(700px) rotateY(${(lookX*14).toFixed(2)}deg) rotateX(${(-lookY*10).toFixed(2)}deg)`;logoCv.style.transform=tf;if(haloCv)haloCv.style.transform=tf}
+  if(logoCv){const tf=`perspective(700px) rotateY(${(lookX*14).toFixed(2)}deg) rotateX(${(-lookY*10).toFixed(2)}deg)`;logoCv.style.transform=tf;if(haloCv)haloCv.style.transform=tf+" translateZ(-6px)"}
   drawHalo(t);
   if(!pageHidden&&t-lastLogo>15){lastLogo=t;logoHov+=(logoHovT-logoHov)*.18;if(Math.abs(logoHovT-logoHov)<.005)logoHov=logoHovT;drawLogo(t)}requestAnimationFrame(logoLoop)}
 logoImg.onload=()=>{logoW=0;drawLogo(reduce?0:performance.now());requestAnimationFrame(logoLoop)};

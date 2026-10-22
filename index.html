@@ -288,7 +288,7 @@ dd{margin:0;font-size:15px}
         <p style="margin:0;color:var(--mute);max-width:38ch">Tell us about the song, the film or the idea. Send it our way and we'll get back to you.</p>
         <div>
           <div class="label" style="margin-bottom:6px">Email</div>
-          <div class="mail"><code id="email">daniel@pato.pt</code><button class="icon-btn" type="button" data-copy="email">Copy</button></div>
+          <div class="mail"><code id="email">info@bygrain.com</code><button class="icon-btn" type="button" data-copy="email">Copy</button></div>
         </div>
         <div>
           <div class="label" style="margin-bottom:6px">Elsewhere</div>
@@ -383,7 +383,7 @@ dd{margin:0;font-size:15px}
       <dl id="pMeta"></dl>
     </div>
     <div class="proj-cta">
-      <span class="label">Start a project</span><code style="font-family:var(--mono);user-select:all">daniel@pato.pt</code>
+      <span class="label">Start a project</span><code style="font-family:var(--mono);user-select:all">info@bygrain.com</code>
       <a class="icon-btn" href="https://www.instagram.com/by.grain" target="_blank" rel="noopener" style="text-decoration:none">Instagram ↗</a>
       <span class="note">Esc to close · ← → for other projects</span>
     </div>
@@ -681,7 +681,7 @@ function copy(text,btn){
     const s=getSelection(),r=document.createRange();r.selectNodeContents(btn.closest(".brief")?document.getElementById("briefText"):document.getElementById("email"));s.removeAllRanges();s.addRange(r);btn.textContent="Press ⌘/Ctrl+C";
   });
 }
-document.querySelector('[data-copy="email"]').onclick=e=>copy("daniel@pato.pt",e.currentTarget);
+document.querySelector('[data-copy="email"]').onclick=e=>copy("info@bygrain.com",e.currentTarget);
 const form=document.getElementById("briefForm"),brief=document.getElementById("brief");
 form.addEventListener("submit",async e=>{
   e.preventDefault();const v=id=>document.getElementById(id).value.trim();const err=document.getElementById("err");

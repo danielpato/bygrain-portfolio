@@ -66,8 +66,8 @@ nav a:hover{color:var(--paper)}
 #dock{position:fixed;z-index:35;left:50%;translate:-50% 0;bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;align-items:flex-end;gap:10px;padding:8px 10px;border-radius:22px;
   background:rgba(38,38,38,.42);border:1px solid rgba(255,255,255,.16);box-shadow:0 10px 40px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08);
   -webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%)}
-.dock-item{position:relative;display:block;--s:1;width:calc(48px*var(--s));height:48px;flex:none;transition:width .14s ease-out;text-decoration:none;outline:none}
-.dock-icon{position:absolute;left:50%;bottom:0;translate:-50% 0;display:grid;place-items:center;width:calc(48px*var(--s));height:calc(48px*var(--s));transition:width .14s ease-out,height .14s ease-out;border-radius:22%;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.35),inset 0 0 0 .5px rgba(255,255,255,.18)}
+.dock-item{position:relative;display:block;--s:1;width:calc(48px*var(--s));height:48px;flex:none;text-decoration:none;outline:none}
+.dock-icon{position:absolute;left:50%;bottom:0;translate:-50% 0;display:grid;place-items:center;width:calc(48px*var(--s));height:calc(48px*var(--s));will-change:width,height;border-radius:22%;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.35),inset 0 0 0 .5px rgba(255,255,255,.18)}
 .dock-icon svg{width:62%;height:62%;display:block}
 .dock-icon.ig{background:none}
 .dock-icon.finder,.dock-icon.app{background:none;box-shadow:none}
@@ -786,8 +786,24 @@ logoImg.onload=()=>{logoW=0;drawLogo(reduce?0:performance.now());requestAnimatio
   const dock=document.getElementById("dock"),items=[...dock.querySelectorAll(".dock-item")];
   const fine=matchMedia("(hover:hover) and (pointer:fine)").matches;
   if(!fine||reduce)return;
-  dock.addEventListener("mousemove",e=>{items.forEach(it=>{const b=it.getBoundingClientRect(),d=Math.abs(e.clientX-(b.left+b.width/2));it.style.setProperty("--s",(1+.55*Math.max(0,1-d/110)).toFixed(3))})});
-  dock.addEventListener("mouseleave",()=>items.forEach(it=>it.style.setProperty("--s",1)));
+  /* macOS-style magnification: cursor position is eased every frame, sizes follow a smooth cosine falloff */
+  const BASE=48,AMP=.6,RANGE=150,cur=items.map(()=>1);let mx=null,smx=null,raf=0;
+  const centers=()=>{let x=dock.getBoundingClientRect().left+10;return items.map((it,i)=>{const w=BASE*cur[i];const c=x+w/2;x+=w+10;return c})};
+  function tick(){
+    raf=0;let moving=false;
+    if(mx!==null){smx=smx===null?mx:smx+(mx-smx)*.35;if(Math.abs(mx-smx)>.3)moving=true}
+    const cs=centers();
+    items.forEach((it,i)=>{
+      let t=1;if(smx!==null&&mx!==null){const d=Math.abs(smx-cs[i]);if(d<RANGE)t=1+AMP*Math.cos(d/RANGE*Math.PI/2)**2}
+      cur[i]+=(t-cur[i])*.28;if(Math.abs(t-cur[i])>.002)moving=true;else cur[i]=t;
+      it.style.setProperty("--s",cur[i].toFixed(4));
+    });
+    if(mx===null&&!moving)smx=null;
+    if(moving)raf=requestAnimationFrame(tick);
+  }
+  const kick=()=>{if(!raf)raf=requestAnimationFrame(tick)};
+  dock.addEventListener("mousemove",e=>{mx=e.clientX;kick()});
+  dock.addEventListener("mouseleave",()=>{mx=null;kick()});
 })();
 
 ["gesturestart","gesturechange"].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false})); /* iOS: keep pinches for the ring */

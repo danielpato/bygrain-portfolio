@@ -774,7 +774,17 @@ document.addEventListener("pointerover",e=>{if(e.target.closest&&e.target.closes
 document.addEventListener("pointerout",e=>{if(e.target.closest&&e.target.closest("#core .word"))logoHovT=0});
 document.addEventListener("focusin",e=>{if(e.target.matches&&e.target.matches("#core .word"))logoHovT=1});
 document.addEventListener("focusout",e=>{if(e.target.matches&&e.target.matches("#core .word"))logoHovT=0});
-function logoLoop(t){if(!pageHidden&&t-lastLogo>15){lastLogo=t;logoHov+=(logoHovT-logoHov)*.18;if(Math.abs(logoHovT-logoHov)<.005)logoHov=logoHovT;drawLogo(t)}requestAnimationFrame(logoLoop)}
+/* the logo turns slightly to face the cursor */
+let lookX=0,lookY=0,lookTX=0,lookTY=0;
+if(matchMedia("(hover:hover) and (pointer:fine)").matches&&!reduce){
+  addEventListener("mousemove",e=>{if(!logoCv)return;const b=logoCv.getBoundingClientRect(),cx=b.left+b.width/2,cy=b.top+b.height/2;
+    lookTX=Math.max(-1,Math.min(1,(e.clientX-cx)/(innerWidth/2)));lookTY=Math.max(-1,Math.min(1,(e.clientY-cy)/(innerHeight/2)))});
+  document.addEventListener("mouseleave",()=>{lookTX=lookTY=0});
+}
+function logoLoop(t){
+  lookX+=(lookTX-lookX)*.08;lookY+=(lookTY-lookY)*.08;
+  if(logoCv)logoCv.style.transform=`perspective(700px) rotateY(${(lookX*14).toFixed(2)}deg) rotateX(${(-lookY*10).toFixed(2)}deg)`;
+  if(!pageHidden&&t-lastLogo>15){lastLogo=t;logoHov+=(logoHovT-logoHov)*.18;if(Math.abs(logoHovT-logoHov)<.005)logoHov=logoHovT;drawLogo(t)}requestAnimationFrame(logoLoop)}
 logoImg.onload=()=>{logoW=0;drawLogo(reduce?0:performance.now());requestAnimationFrame(logoLoop)};
 
 /* ---------- dock ---------- */

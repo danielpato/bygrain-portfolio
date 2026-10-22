@@ -115,6 +115,7 @@ body{overflow:hidden}
 #core .word:focus-visible{outline:none}
 .gscope .glow.specks{background:radial-gradient(closest-side,rgba(110,110,255,.95),rgba(0,0,255,.6) 50%,rgba(0,0,255,0) 90%);-webkit-mask:var(--specks);mask:var(--specks);-webkit-mask-size:260px;mask-size:260px;animation:breathe 6s ease-in-out infinite,grain .45s steps(1) infinite reverse}
 .gscope .glow.soft{-webkit-mask:none;mask:none;filter:blur(30px);opacity:.55}
+.gscope .halo{position:absolute;left:50%;top:50%;translate:-50% -50%;pointer-events:none;max-width:none}
 #core .word{pointer-events:auto;cursor:pointer;transition:scale .3s ease,filter .3s ease;position:absolute;left:50%;top:50%;translate:-50% -50%;transform-origin:50% 50%;width:var(--fs);max-width:none;height:auto;filter:drop-shadow(0 0 18px rgba(0,0,255,.4)) drop-shadow(0 0 3px rgba(120,120,255,.2))}
 @keyframes breathe{0%,100%{opacity:.85;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}}
 @media (prefers-reduced-motion:reduce){.gscope .glow{animation:none}}
@@ -532,13 +533,13 @@ function build(){
   });
   core=document.createElement("div");core.id="core";
   core.style.setProperty("--gw",(R*.83)+"px");core.style.setProperty("--fs",(R*(narrow?.62:.54))+"px");core.style.setProperty("--noise",NOISE);core.style.setProperty("--specks",NOISE.replace("baseFrequency='.55'","baseFrequency='.8'").replace("2.6 -.95","5 -3.3"));
-  core.innerHTML='<div class="gwrap"><div class="glow soft"></div><div class="glow"></div><div class="glow specks"></div></div><canvas class="word" role="button" tabindex="0" aria-label="byGrain©, open menu"></canvas>';
+  core.innerHTML='<div class="gwrap"><div class="glow soft"></div><div class="glow"></div><div class="glow specks"></div></div><canvas class="halo" aria-hidden="true"></canvas><canvas class="word" role="button" tabindex="0" aria-label="byGrain©, open menu"></canvas>';
   core.classList.add("gscope");
   /* phones: draw the glow as a flat light behind the ring so steep tilts can't slice it through the frames */
   let fg=document.getElementById("flatGlow");if(fg)fg.remove();flatGlow=null;
   {const gw=core.querySelector(".gwrap");fg=document.createElement("div");fg.id="flatGlow";fg.className="gscope";fg.setAttribute("aria-hidden","true");
     ["--gw","--noise","--specks"].forEach(k=>fg.style.setProperty(k,core.style.getPropertyValue(k)));fg.appendChild(gw);stage.insertBefore(fg,ring);flatGlow=fg}
-  ring.appendChild(core);logoCv=core.querySelector(".word");logoW=0;if(typeof drawLogo==="function")requestAnimationFrame(()=>drawLogo(performance.now()));
+  ring.appendChild(core);logoCv=core.querySelector(".word");haloCv=core.querySelector(".halo");logoW=0;if(typeof drawLogo==="function")requestAnimationFrame(()=>drawLogo(performance.now()));
   render();
 }
 let TILT=-15,coreZ=0,flatGlow=null;let tilt=TILT,core=null,reveal=0,opened=false,zoom=1,zoomT=1;const hint=document.getElementById("hint");
@@ -721,12 +722,26 @@ addEventListener("keydown",e=>{if(e.key==="Escape"&&proj.hidden&&!site.hidden)se
 
 
 /* ---------- centre logo: flowing opacity waves (50%–80%) ---------- */
-let logoCv=null,logoW=0,logoSolid=null;const logoImg=new Image();logoImg.src=LOGO;
+let logoCv=null,logoW=0,logoSolid=null,haloCv=null,haloP=0,haloAt=0,haloR=0,prox=0,proxT=0;const haloTmp=document.createElement("canvas");
+/* "dissolve" outer glow: blur the logo's silhouette, then keep each pixel only if a random draw falls under its glow strength */
+function drawHalo(now){
+  if(!haloCv||!logoSolid||!haloCv.width)return;
+  prox+=(Math.max(proxT,logoHov)-prox)*.12;
+  const target=haloP*(.12+.85*prox);haloR+=(target-haloR)*.2;
+  if(now-haloAt<70&&!reduce)return;haloAt=now;
+  const W=haloCv.width,H=haloCv.height,t=haloTmp.getContext("2d",{willReadFrequently:true});
+  t.clearRect(0,0,W,H);t.filter=`blur(${Math.max(.5,haloR*.55).toFixed(1)}px)`;
+  for(let k=0;k<3;k++)t.drawImage(logoSolid,haloP,haloP,logoCv.width,logoCv.height);
+  t.filter="none";
+  const im=t.getImageData(0,0,W,H),d=im.data,gain=.55+.45*prox;
+  for(let i=0;i<d.length;i+=4){const a=d[i+3]/255*gain;if(a>0&&Math.random()<a){d[i]=150;d[i+1]=165;d[i+2]=255;d[i+3]=Math.round(140+115*a)}else d[i+3]=0}
+  const h=haloCv.getContext("2d");h.clearRect(0,0,W,H);h.putImageData(im,0,0);
+}const logoImg=new Image();logoImg.src=LOGO;
 const FW=64,FH=20,field=document.createElement("canvas");field.width=FW;field.height=FH;
 const fctx=field.getContext("2d"),fdata=fctx.createImageData(FW,FH);
 function sizeLogo(){
   if(!logoCv||!logoImg.naturalWidth)return false;
-  const W=logoCv.getBoundingClientRect().width/(parseFloat(getComputedStyle(logoCv).scale)||1)||parseFloat(getComputedStyle(logoCv).width)||280;
+  const W=logoCv.offsetWidth||parseFloat(getComputedStyle(logoCv).width)||280;
   const dpr=Math.min(2,devicePixelRatio||1);logoW=Math.round(W*dpr);
   logoCv.width=logoW;logoCv.height=Math.round(logoW*logoImg.naturalHeight/logoImg.naturalWidth);
   /* solid copy: the artwork's grain is partly transparent, so boost every pixel's alpha for the hover state */
@@ -734,7 +749,11 @@ function sizeLogo(){
   const sx=logoSolid.getContext("2d");sx.drawImage(logoImg,0,0,logoSolid.width,logoSolid.height);
   const im=sx.getImageData(0,0,logoSolid.width,logoSolid.height),dd=im.data;
   for(let k=0;k<dd.length;k+=4){dd[k]=dd[k+1]=dd[k+2]=255;dd[k+3]=Math.min(255,dd[k+3]*4)}
-  sx.putImageData(im,0,0);return true;
+  sx.putImageData(im,0,0);
+  /* halo canvas: logo-sized plus padding for the dissolve glow */
+  if(haloCv){haloP=Math.round(logoW*.3);haloCv.width=logoW+haloP*2;haloCv.height=logoCv.height+haloP*2;
+    haloCv.style.width=(haloCv.width/dpr)+"px";haloCv.style.height=(haloCv.height/dpr)+"px";haloTmp.width=haloCv.width;haloTmp.height=haloCv.height}
+  return true;
 }
 function drawLogo(t){
   if(!logoCv)return;if(!logoW&&!sizeLogo())return;
@@ -778,12 +797,14 @@ document.addEventListener("focusout",e=>{if(e.target.matches&&e.target.matches("
 let lookX=0,lookY=0,lookTX=0,lookTY=0;
 if(matchMedia("(hover:hover) and (pointer:fine)").matches&&!reduce){
   addEventListener("mousemove",e=>{if(!logoCv)return;const b=logoCv.getBoundingClientRect(),cx=b.left+b.width/2,cy=b.top+b.height/2;
+    proxT=Math.max(0,1-Math.hypot(e.clientX-cx,e.clientY-cy)/(Math.min(innerWidth,innerHeight)*.55));
     lookTX=Math.max(-1,Math.min(1,(e.clientX-cx)/(innerWidth/2)));lookTY=Math.max(-1,Math.min(1,(e.clientY-cy)/(innerHeight/2)))});
-  document.addEventListener("mouseleave",()=>{lookTX=lookTY=0});
+  document.addEventListener("mouseleave",()=>{lookTX=lookTY=0;proxT=0});
 }
 function logoLoop(t){
   lookX+=(lookTX-lookX)*.08;lookY+=(lookTY-lookY)*.08;
-  if(logoCv)logoCv.style.transform=`perspective(700px) rotateY(${(lookX*14).toFixed(2)}deg) rotateX(${(-lookY*10).toFixed(2)}deg)`;
+  if(logoCv){const tf=`perspective(700px) rotateY(${(lookX*14).toFixed(2)}deg) rotateX(${(-lookY*10).toFixed(2)}deg)`;logoCv.style.transform=tf;if(haloCv)haloCv.style.transform=tf}
+  drawHalo(t);
   if(!pageHidden&&t-lastLogo>15){lastLogo=t;logoHov+=(logoHovT-logoHov)*.18;if(Math.abs(logoHovT-logoHov)<.005)logoHov=logoHovT;drawLogo(t)}requestAnimationFrame(logoLoop)}
 logoImg.onload=()=>{logoW=0;drawLogo(reduce?0:performance.now());requestAnimationFrame(logoLoop)};
 

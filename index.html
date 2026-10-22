@@ -500,20 +500,22 @@ function build(){
   const H=narrow?Math.min(vh*.3,R*.85):Math.max(200,Math.min(vh*.477,R*.82));
   stage.style.perspective=Math.round(R*2.7)+"px";
   /* columns like a contact sheet, but each column is staggered: its own height, start offset, gaps, widths and nudge */
-  const r=rng(42),cols=narrow?9:16,gap=narrow?6:10,placed=[];
+  /* each main release appears exactly once: spread them over staggered columns of 1–2 frames */
+  const N=RING.length,r=rng(42),cols=Math.max(4,Math.round(N/1.6)),gap=narrow?6:10,placed=[];
+  const counts=Array(cols).fill(1);let extra=N-cols;while(extra>0){const i=(r()*cols)|0;if(counts[i]<2){counts[i]++;extra--}}
   const weights=Array.from({length:cols},()=>.7+r()*.8),sum=weights.reduce((a,b)=>a+b,0);
   let acc=0;
   for(let i=0;i<cols;i++){
     const arc=weights[i]/sum*Math.PI*2,mid=acc+arc/2;acc+=arc;
     const colW=2*R*Math.sin(arc/2)-gap;
-    const n=r()<.3?1:r()<.65?2:3;
-    const span=H*(.72+r()*.38);                       // column height varies
+    const n=counts[i];
+    const span=n===1?H*(.4+r()*.22):H*(.68+r()*.3);                       // column height varies
     const gaps=Array.from({length:n-1},()=>gap*(1+r()*4)); // uneven gaps
     const free=span-gaps.reduce((a,b)=>a+b,0);
     let parts=Array.from({length:n},()=>.5+r());const ps=parts.reduce((a,b)=>a+b,0);
     let y=-span/2+(r()-.5)*H*.32;                     // column slides up or down
     parts.forEach((f,j)=>{
-      const h=free*f/ps,w=colW*(.74+r()*.26);
+      const h=free*f/ps,w=Math.min(colW*(.5+r()*.24),h*1.9);
       const x=mid*R+(colW-w)*(r()-.5);                 // nudge within the column
       placed.push({x,y,w,h,dz:(r()-.4)*R*.08});
       y+=h+(gaps[j]||0);
@@ -529,12 +531,12 @@ function build(){
       cards.push({el:b,theta:q.x/R,y:q.y,dz:q.dz,k:k/placed.length,shade:b.lastChild});
   });
   core=document.createElement("div");core.id="core";
-  core.style.setProperty("--gw",(R*(narrow?.82:1.15))+"px");core.style.setProperty("--fs",(R*(narrow?.62:.54))+"px");core.style.setProperty("--noise",NOISE);core.style.setProperty("--specks",NOISE.replace("baseFrequency='.55'","baseFrequency='.8'").replace("2.6 -.95","5 -3.3"));
+  core.style.setProperty("--gw",(R*.83)+"px");core.style.setProperty("--fs",(R*(narrow?.62:.54))+"px");core.style.setProperty("--noise",NOISE);core.style.setProperty("--specks",NOISE.replace("baseFrequency='.55'","baseFrequency='.8'").replace("2.6 -.95","5 -3.3"));
   core.innerHTML='<div class="gwrap"><div class="glow soft"></div><div class="glow"></div><div class="glow specks"></div></div><canvas class="word" role="button" tabindex="0" aria-label="byGrain©, open menu"></canvas>';
   core.classList.add("gscope");
   /* phones: draw the glow as a flat light behind the ring so steep tilts can't slice it through the frames */
   let fg=document.getElementById("flatGlow");if(fg)fg.remove();flatGlow=null;
-  if(narrow){const gw=core.querySelector(".gwrap");fg=document.createElement("div");fg.id="flatGlow";fg.className="gscope";fg.setAttribute("aria-hidden","true");
+  {const gw=core.querySelector(".gwrap");fg=document.createElement("div");fg.id="flatGlow";fg.className="gscope";fg.setAttribute("aria-hidden","true");
     ["--gw","--noise","--specks"].forEach(k=>fg.style.setProperty(k,core.style.getPropertyValue(k)));fg.appendChild(gw);stage.insertBefore(fg,ring);flatGlow=fg}
   ring.appendChild(core);logoCv=core.querySelector(".word");logoW=0;if(typeof drawLogo==="function")requestAnimationFrame(()=>drawLogo(performance.now()));
   render();

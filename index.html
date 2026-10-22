@@ -497,7 +497,7 @@ let cards=[],angle=0,vel=0,R=500,paused=reduce,auto=-0.0016;
 function build(){
   ring.innerHTML="";cards=[];
   const vw=stage.clientWidth,vh=window.innerHeight;
-  const narrow=vw<600;TILT=narrow?-24:-15;
+  const narrow=vw<600;TILT=narrow?-24:-15;ZOOM_TILT=narrow?20:9; /* phones start steeper, so zooming lifts them further */
   R=narrow?Math.min(vw*.66,vh*.42):Math.max(180,Math.min(vw*.378,vh*.765,846));
   coreZ=0;tilt=TILT;
   const H=narrow?Math.min(vh*.36,R*1.05):Math.max(200,Math.min(vh*.477,R*.82));
@@ -544,11 +544,11 @@ function build(){
   ring.appendChild(core);logoCv=core.querySelector(".word");haloCv=core.querySelector(".halo");logoW=0;if(typeof drawLogo==="function")requestAnimationFrame(()=>drawLogo(performance.now()));
   render();
 }
-let TILT=-15,coreZ=0,flatGlow=null;let tilt=TILT,core=null,reveal=0,opened=false,zoom=1,zoomT=1;const hint=document.getElementById("hint");
+let TILT=-15,coreZ=0,flatGlow=null,ZOOM_TILT=9;let tilt=TILT,core=null,reveal=0,opened=false,zoom=1,zoomT=1;const hint=document.getElementById("hint");
 function setOpen(v){opened=v;hint.style.opacity=v?0:1;cards.forEach(c=>c.el.tabIndex=v?0:-1);if(reduce)reveal=v?1:0;tip.hidden=true}
 const NOISE="url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2.6 -.95'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
 function render(){
-  const tz=tilt+Math.max(0,zoom-1)*9; /* zooming in eases the ring up toward eye level */
+  const tz=tilt+Math.max(0,zoom-1)*ZOOM_TILT; /* zooming in eases the ring up toward eye level */
   ring.style.transform=`translateZ(${-R*1.05}px) rotateX(${tz}deg) rotateY(${angle}rad)`;
   if(core){core.style.transform=`rotateY(${-angle}rad) rotateX(${-tz}deg) translateZ(${coreZ}px)`;core.style.setProperty("--z",zoom.toFixed(3))}
   if(flatGlow&&logoCv){const b=logoCv.getBoundingClientRect(),sr=stage.getBoundingClientRect();flatGlow.style.left=(b.left+b.width/2-sr.left)+"px";flatGlow.style.top=(b.top+b.height/2-sr.top)+"px";flatGlow.style.setProperty("--z",zoom.toFixed(3))}

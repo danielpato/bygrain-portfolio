@@ -551,7 +551,7 @@ function render(){
   if(flatGlow&&logoCv){const b=logoCv.getBoundingClientRect(),sr=stage.getBoundingClientRect();flatGlow.style.left=(b.left+b.width/2-sr.left)+"px";flatGlow.style.top=(b.top+b.height/2-sr.top)+"px";flatGlow.style.setProperty("--z",zoom.toFixed(3))}
   for(const c of cards){
     const t=Math.min(1,Math.max(0,reveal*1.8-c.k*.8)),e=1-Math.pow(1-t,3);
-    c.el.style.transform=`rotateY(${c.theta}rad) translateZ(${(R+c.dz)*e*zoom}px) translateY(${c.y*e*(zoom<1?zoom:.55+.45*zoom)}px) scale(${(.25+.75*e)*Math.min(1,zoom)})`;
+    c.el.style.transform=`rotateY(${c.theta}rad) translateZ(${(R+c.dz)*e*zoom}px) translateY(${c.y*e*(zoom<1?zoom:.55+.45*zoom)}px) scale(${(.25+.75*e)*(zoom<1?zoom:1+.5*(zoom-1))})`;
     c.el.style.opacity=t.toFixed(3);c.el.style.pointerEvents=t>.9?"":"none";
     const z=Math.cos(c.theta+angle);c.shade.style.opacity=((1-z)/2*.78).toFixed(3);
   }

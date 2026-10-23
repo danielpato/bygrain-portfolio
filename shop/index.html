@@ -265,7 +265,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 #proj.open .proj-hero{transform:none}
 /* the player is drawn 1.5x larger and scaled back down, so YouTube's own title and buttons come out about a third smaller */
 .proj-hero{position:relative}
-.proj-hero iframe{position:absolute;top:0;left:0;width:150%;height:150%;transform:scale(calc(1/1.5));transform-origin:0 0;border:0;display:block;background:#000}
+.proj-hero iframe{position:absolute;top:0;left:0;width:150%;height:150%;transform:scale(calc(1/1.5));transform-origin:0 0;border:0;display:block;background:#000;backface-visibility:hidden}
 .proj-hero video,.proj-hero img{width:100%;height:100%;display:block;object-fit:cover;background:#000}
 .proj-body{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:48px;margin-top:36px}
 .proj-body h2{font-family:var(--display);font-weight:800;font-size:clamp(40px,6vw,88px);line-height:.92;letter-spacing:-.045em;margin:0 0 20px}
@@ -772,7 +772,7 @@ function fill(i){
   const hv=document.getElementById("pHero"),hf=document.getElementById("pHeroFallback"),yt=document.getElementById("pYT");
   hf.src=pic(p);hf.hidden=false;hv.hidden=true;
   if(EMBED_YT){ /* the release's YouTube player, inside our playlist */
-    hv.pause();hv.removeAttribute("src");hv.load();hf.hidden=true;yt.hidden=false;yt.title=`${p.t} by ${p.artist} on YouTube`;
+    hv.pause();hv.removeAttribute("src");hv.load();hf.hidden=true;yt.hidden=false;requestAnimationFrame(fitYT);yt.title=`${p.t} by ${p.artist} on YouTube`;
     yt.src=`https://www.youtube-nocookie.com/embed/${p.yt}?list=PLVhfLWZYid6S9jJNAF8yoO8K44bNmpxk4&rel=0&playsinline=1&modestbranding=1&color=white`;
   }else if(p.m){
     hv.onloadeddata=()=>{hv.hidden=false;hf.hidden=true};hv.onerror=()=>{hv.hidden=true;hf.hidden=false};
@@ -781,6 +781,11 @@ function fill(i){
   }else{hv.onloadeddata=hv.onerror=null;hv.pause();hv.removeAttribute("src");hv.load()}
   proj.scrollTop=0;
 }
+/* size the enlarged player in whole even pixels and scale it to land exactly on the box,
+   so no half-pixel seam shows through the middle of the video */
+function fitYT(){const yt=document.getElementById("pYT");if(!yt||yt.hidden)return;const h=yt.parentElement,w=h.clientWidth,ht=h.clientHeight;if(!w||!ht)return;
+  const W=Math.round(w*.75)*2,H=Math.round(ht*.75)*2;yt.style.width=W+"px";yt.style.height=H+"px";yt.style.transform=`scale(${w/W},${ht/H})`}
+if(window.ResizeObserver)new ResizeObserver(fitYT).observe(document.querySelector(".proj-hero"));addEventListener("resize",fitYT);
 function openProject(i,from){
   returnFocus=from||document.activeElement;tip.hidden=true;
   proj.hidden=false;document.body.style.overflow="hidden";fill(i);render();

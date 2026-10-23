@@ -514,9 +514,9 @@ function build(){
   ring.innerHTML="";cards=[];
   const vw=stage.clientWidth,vh=window.innerHeight;
   const narrow=vw<600;TILT=narrow?-24:-15;ZOOM_TILT=narrow?20:9; /* phones start steeper, so zooming lifts them further */
-  R=narrow?Math.min(vw*.66,vh*.42):Math.max(180,Math.min(vw*.378,vh*.765,846));
+  R=narrow?Math.min(vw*.66,vh*.42):Math.max(180,Math.min(vw*.378,vh*.765,545)) /* capped at the size an M1 MacBook (1440×900) shows */;
   coreZ=0;tilt=TILT;
-  const H=narrow?Math.min(vh*.36,R*1.05):Math.max(200,Math.min(vh*.477,R*.82));
+  const H=narrow?Math.min(vh*.36,R*1.05):Math.max(200,Math.min(vh*.477,R*.82,375));
   stage.style.perspective=Math.round(R*2.7)+"px";
   /* columns like a contact sheet, but each column is staggered: its own height, start offset, gaps, widths and nudge */
   /* each main release appears exactly once: spread them over staggered columns of 1–2 frames */

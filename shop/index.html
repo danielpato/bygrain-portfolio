@@ -745,14 +745,20 @@ function render(){
 }
 let hoverCard=null;
 /* only a real mouse movement onto a frame counts; frames drifting under a still cursor don't stop the ring */
-stage.addEventListener("pointermove",e=>{if(e.pointerType==="touch"||(!e.movementX&&!e.movementY))return;hoverCard=e.target.closest(".card")});
+let ptrX=-1,ptrY=-1;
+stage.addEventListener("pointermove",e=>{if(e.pointerType==="touch")return;ptrX=e.clientX;ptrY=e.clientY;if(!e.movementX&&!e.movementY)return;hoverCard=e.target.closest(".card")});
 stage.addEventListener("pointerout",e=>{if(hoverCard&&e.target.closest(".card")===hoverCard&&!hoverCard.contains(e.relatedTarget))hoverCard=null});
-stage.addEventListener("pointerleave",()=>{hoverCard=null});
-function loop(){
+stage.addEventListener("pointerleave",()=>{hoverCard=null;ptrX=ptrY=-1});
+let lastFrame=0;
+function loop(now){
+  /* advance by elapsed time, so a busy frame never makes the spin itself slower */
+  const fr=lastFrame?Math.min(3,Math.max(.25,(now-lastFrame)/16.667)):1;lastFrame=now;
   const dz=zoomT-zoom;zoom+=dz*(pinch0?.35:.12);
   /* hovering a frame on the front of the ring holds the spin, only in the middle 60% of the ring's width */
+  /* the held frame must still be the one under the cursor; frames drift away without firing pointer events */
+  if(hoverCard&&ptrX>=0){const el=document.elementFromPoint(ptrX,ptrY);if(!el||el.closest(".card")!==hoverCard)hoverCard=null}
   let hold=false;if(hoverCard&&!dragging&&!store){const c=cards.find(c=>c.el===hoverCard);if(c){const ph=c.theta+angle;hold=Math.cos(ph)>0&&Math.abs(Math.sin(ph))<=.6}}
-  if(!dragging){ if(hold) vel*=.85; else if(!paused) vel+= (auto-vel)*.02; else vel*=.92; angle+=vel; tilt+=(TILT-tilt)*.05; reveal+=((opened?1:0)-reveal)*.035; render(); }
+  if(!dragging){ if(hold) vel*=.85; else if(!paused) vel+= (auto-vel)*.02; else vel*=.92; angle+=vel*fr; tilt+=(TILT-tilt)*.05; reveal+=((opened?1:0)-reveal)*.035; render(); }
   else if(Math.abs(dz)>.0005)render();
   requestAnimationFrame(loop);
 }

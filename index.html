@@ -724,9 +724,14 @@ function render(){
     const z=Math.cos(c.theta+angle),dim=(1-z)/2*.78;if(c.merch)c.img.style.opacity=(1-dim).toFixed(3);else c.shade.style.opacity=dim.toFixed(3);
   }
 }
+let hoverCard=null;
+stage.addEventListener("pointerover",e=>{if(e.pointerType==="touch")return;hoverCard=e.target.closest(".card")});
+stage.addEventListener("pointerleave",()=>{hoverCard=null});
 function loop(){
   const dz=zoomT-zoom;zoom+=dz*(pinch0?.35:.12);
-  if(!dragging){ if(!paused) vel+= (auto-vel)*.02; else vel*=.92; angle+=vel; tilt+=(TILT-tilt)*.05; reveal+=((opened?1:0)-reveal)*.035; render(); }
+  /* hovering a frame on the front of the ring holds the spin, unless it sits within 20% of the ring's turning edge */
+  let hold=false;if(hoverCard&&!dragging&&!store){const c=cards.find(c=>c.el===hoverCard);if(c){const ph=c.theta+angle;hold=Math.cos(ph)>0&&Math.abs(Math.sin(ph))<=.8}}
+  if(!dragging){ if(hold) vel*=.85; else if(!paused) vel+= (auto-vel)*.02; else vel*=.92; angle+=vel; tilt+=(TILT-tilt)*.05; reveal+=((opened?1:0)-reveal)*.035; render(); }
   else if(Math.abs(dz)>.0005)render();
   requestAnimationFrame(loop);
 }

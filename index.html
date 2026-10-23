@@ -729,8 +729,8 @@ stage.addEventListener("pointerover",e=>{if(e.pointerType==="touch")return;hover
 stage.addEventListener("pointerleave",()=>{hoverCard=null});
 function loop(){
   const dz=zoomT-zoom;zoom+=dz*(pinch0?.35:.12);
-  /* hovering a frame on the front of the ring holds the spin, unless it sits within 20% of the ring's turning edge */
-  let hold=false;if(hoverCard&&!dragging&&!store){const c=cards.find(c=>c.el===hoverCard);if(c){const ph=c.theta+angle;hold=Math.cos(ph)>0&&Math.abs(Math.sin(ph))<=.8}}
+  /* hovering a frame on the front of the ring holds the spin, only in the middle 60% of the ring's width */
+  let hold=false;if(hoverCard&&!dragging&&!store){const c=cards.find(c=>c.el===hoverCard);if(c){const ph=c.theta+angle;hold=Math.cos(ph)>0&&Math.abs(Math.sin(ph))<=.6}}
   if(!dragging){ if(hold) vel*=.85; else if(!paused) vel+= (auto-vel)*.02; else vel*=.92; angle+=vel; tilt+=(TILT-tilt)*.05; reveal+=((opened?1:0)-reveal)*.035; render(); }
   else if(Math.abs(dz)>.0005)render();
   requestAnimationFrame(loop);

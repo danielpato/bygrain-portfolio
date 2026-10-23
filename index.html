@@ -533,7 +533,7 @@ function build(){
     const gaps=Array.from({length:n-1},()=>gap*(1+r()*4)); // uneven gaps
     const free=span-gaps.reduce((a,b)=>a+b,0);
     let parts=Array.from({length:n},()=>.5+r());const ps=parts.reduce((a,b)=>a+b,0);
-    let y=-span/2+(r()-.5)*H*.32;                     // column slides up or down
+    let y=-span/2+(store?((i%2?1:-1)*H*(.1+r()*.12)+(r()-.5)*H*.1):(r()-.5)*H*.32);                     // column slides up or down
     parts.forEach((f,j)=>{
       const h=free*f/ps,w=store?Math.min(colW*.84,h*1.25):Math.min(colW*(narrow?.66+r()*.22:.5+r()*.24),h*1.9);
       const x=mid*R+(colW-w)*(r()-.5);                 // nudge within the column

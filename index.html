@@ -734,11 +734,13 @@ function build(){
 let TILT=-15,coreZ=0,flatGlow=null,ZOOM_TILT=9;let tilt=TILT,core=null,reveal=0,opened=false,zoom=1,zoomT=1;const hint=document.getElementById("hint");
 function setOpen(v){opened=v;hint.style.opacity=v?0:1;cards.forEach(c=>c.el.tabIndex=v?0:-1);if(reduce)reveal=v?1:0;tip.hidden=true}
 const NOISE="url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2.6 -.95'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
+let glowKey="";
 function render(){
   const tz=tilt+Math.max(0,zoom-1)*ZOOM_TILT; /* zooming in eases the ring up toward eye level */
   ring.style.transform=`translateZ(${-R*1.05}px) rotateX(${tz}deg) rotateY(${angle}rad)`;
   if(core){core.style.transform=`rotateY(${-angle}rad) rotateX(${-tz}deg) translateZ(${coreZ}px)`;core.style.setProperty("--z",zoom.toFixed(3))}
-  if(flatGlow&&logoCv){const b=logoCv.getBoundingClientRect(),sr=stage.getBoundingClientRect();flatGlow.style.left=(b.left+b.width/2-sr.left)+"px";flatGlow.style.top=(b.top+b.height/2-sr.top)+"px";flatGlow.style.setProperty("--z",zoom.toFixed(3));flatGlow.classList.toggle("hires",zoom>1.2)}
+  /* the glow is re-centred on the logo only when the ring's tilt or zoom changes, so it never follows the cursor */
+  if(flatGlow&&logoCv){const key=tz.toFixed(2)+"|"+zoom.toFixed(3)+"|"+R+"|"+logoCv.width+"|"+logoCv.height;if(key!==glowKey){glowKey=key;const tf=logoCv.style.transform;logoCv.style.transform="perspective(700px) rotateY(0deg) rotateX(0deg)";const b=logoCv.getBoundingClientRect(),sr=stage.getBoundingClientRect();logoCv.style.transform=tf;flatGlow.style.left=(b.left+b.width/2-sr.left)+"px";flatGlow.style.top=(b.top+b.height/2-sr.top)+"px";flatGlow.style.setProperty("--z",zoom.toFixed(3));flatGlow.classList.toggle("hires",zoom>1.2)}}
   for(const c of cards){
     const t=Math.min(1,Math.max(0,reveal*1.8-c.k*.8)),e=1-Math.pow(1-t,3);
     c.el.style.transform=`rotateY(${c.theta}rad) translateZ(${(R+c.dz)*e*zoom}px) translateY(${c.y*e*(zoom<1?zoom:.55+.45*zoom)}px) scale(${(.25+.75*e)*(zoom<1?zoom:1+.5*(zoom-1))/CS})`;

@@ -263,7 +263,9 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 .proj-bar .nav{display:flex;gap:8px}
 .proj-hero{width:100%;aspect-ratio:16/9;max-height:72vh;max-width:100%;border-radius:4px;overflow:hidden;background:var(--ink-2);transform:scale(.97);transition:transform .5s cubic-bezier(.2,.8,.2,1)}
 #proj.open .proj-hero{transform:none}
-.proj-hero iframe{width:100%;height:100%;border:0;display:block;background:#000}
+/* the player is drawn 1.5x larger and scaled back down, so YouTube's own title and buttons come out about a third smaller */
+.proj-hero{position:relative}
+.proj-hero iframe{position:absolute;top:0;left:0;width:150%;height:150%;transform:scale(calc(1/1.5));transform-origin:0 0;border:0;display:block;background:#000}
 .proj-hero video,.proj-hero img{width:100%;height:100%;display:block;object-fit:cover;background:#000}
 .proj-body{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:48px;margin-top:36px}
 .proj-body h2{font-family:var(--display);font-weight:800;font-size:clamp(40px,6vw,88px);line-height:.92;letter-spacing:-.045em;margin:0 0 20px}

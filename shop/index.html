@@ -263,7 +263,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 .proj-bar .nav{display:flex;gap:8px}
 .proj-hero{width:100%;aspect-ratio:16/9;max-height:72vh;max-width:100%;border-radius:4px;overflow:hidden;background:var(--ink-2);transform:scale(.97);transition:transform .5s cubic-bezier(.2,.8,.2,1)}
 #proj.open .proj-hero{transform:none}
-/* the player is drawn 1.5x larger and scaled back down, so YouTube's own title and buttons come out about a third smaller */
+/* the player is drawn larger and scaled back down (sized in fitYT), so YouTube's own title and buttons come out smaller */
 .proj-hero{position:relative}
 .proj-hero iframe{position:absolute;top:0;left:0;width:150%;height:150%;transform:scale(calc(1/1.5));transform-origin:0 0;border:0;display:block;background:#000;backface-visibility:hidden}
 .proj-hero video,.proj-hero img{width:100%;height:100%;display:block;object-fit:cover;background:#000}
@@ -784,7 +784,8 @@ function fill(i){
 /* size the enlarged player in whole even pixels and scale it to land exactly on the box,
    so no half-pixel seam shows through the middle of the video */
 function fitYT(){const yt=document.getElementById("pYT");if(!yt||yt.hidden)return;const h=yt.parentElement,w=h.clientWidth,ht=h.clientHeight;if(!w||!ht)return;
-  const W=Math.round(w*.75)*2,H=Math.round(ht*.75)*2;yt.style.width=W+"px";yt.style.height=H+"px";yt.style.transform=`scale(${w/W},${ht/H})`}
+  const k=w<600?1:2; /* phones keep YouTube's own size; elsewhere draw at exactly 2x and halve it, a clean pixel mapping */
+  yt.style.width=w*k+"px";yt.style.height=ht*k+"px";yt.style.transform=k===1?"none":"scale(.5)"}
 if(window.ResizeObserver)new ResizeObserver(fitYT).observe(document.querySelector(".proj-hero"));addEventListener("resize",fitYT);
 function openProject(i,from){
   returnFocus=from||document.activeElement;tip.hidden=true;

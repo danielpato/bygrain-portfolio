@@ -58,10 +58,11 @@ nav a:hover{color:var(--paper)}
 
 /* hero + stage */
 .hero{position:relative;padding-block:28px 8px}
-.hero h1{font-family:var(--display);font-weight:300;font-size:clamp(34px,6vw,80px);line-height:.98;letter-spacing:-.035em;margin:0;max-width:16ch;text-wrap:balance}
+.hero h1{font-family:var(--display);font-weight:300;font-size:clamp(34px,6vw,80px);line-height:.98;letter-spacing:-.035em;margin:0;max-width:none;text-wrap:balance}
 .hero h1 em{font-style:normal;font-weight:800}
-.hero-row{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
-.hero-row p{margin:0;max-width:36ch;color:var(--mute);font-size:15px}
+.hero-row{display:flex;flex-direction:column;align-items:center;text-align:center;gap:1.4em}
+.hero-row p{margin:0;max-width:none;color:var(--mute);font-size:15px}
+@media (max-width:820px){.hero-row p{max-width:40ch;text-wrap:balance}}
 #stage{position:fixed;inset:0;perspective:1500px;perspective-origin:50% 30%;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;overflow:hidden;margin-top:8px}
 #stage.dragging{cursor:grabbing}
 #ring{position:absolute;left:50%;top:43%;width:0;height:0;transform-style:preserve-3d}
@@ -268,7 +269,7 @@ dd{margin:0;font-size:15px}
   <nav class="wrap site-nav" aria-label="Sections"><a href="#index">Releases</a><a href="#studio">Studio</a><a href="#contact">Contact</a><button type="button" class="site-close" id="siteClose">Close ✕</button></nav>
   <div class="wrap hero" id="work">
     <div class="hero-row">
-      <h1>Welcome to <em>byGrain<sup class="reg">©</sup></em>. Uma casa de ideias que colabora com artistas.</h1>
+      <h1>Welcome to<br><em>byGrain<sup class="reg">©</sup></em><br>House of ideas, hub for creation</h1>
       <p>A creative assembly that takes projects from idea to realisation: films, creative direction, production and merch.</p>
     </div>
   </div>

@@ -108,6 +108,7 @@ html.store #dockStore .dock-icon img.fav{opacity:1}
 .hero h1 .sm{font-size:.4em;line-height:1.2;letter-spacing:-.02em}
 .hero h1{display:inline-block;text-align:left}
 .hero h1 em{line-height:1.02;margin:.02em 0 0}
+.hero h1 .hlogo{display:block;height:1.2em;width:auto;margin:.06em 0 .04em}
 .hero h1 .sm:first-child{margin-left:.06em}
 .hero h1 .sm:last-child{margin:-.08em 0 0 2.75em}
 .hero h1 sup.reg{position:absolute;left:100%;top:.14em;font-size:.32em;line-height:1;margin-left:.08em;vertical-align:baseline;font-family:"Exposure",var(--display)}
@@ -308,7 +309,7 @@ dd{margin:0;font-size:15px}
   <nav class="wrap site-nav" aria-label="Sections"><a href="#index">Releases</a><a href="#studio">Studio</a><a href="#contact">Contact</a><button type="button" class="site-close" id="siteClose">Close ✕</button></nav>
   <div class="wrap hero" id="work">
     <div class="hero-row">
-      <h1><span class="sm">Welcome to</span><em>byGrain<sup class="reg">©</sup></em><span class="sm">House of ideas,<br>hub for creation</span></h1>
+      <h1><span class="sm">Welcome to</span><em><img class="hlogo" alt="byGrain©" width="1200" height="367"></em><span class="sm">House of ideas,<br>hub for creation</span></h1>
       <p>A creative assembly working with artists and brands, taking projects from idea to realisation: films, creative direction, production and merch.</p>
     </div>
   </div>
@@ -895,7 +896,7 @@ tick();setInterval(tick,30000);
 
 /* ---------- brand / site panel ---------- */
 const brand=document.getElementById("brand"),site=document.getElementById("site");
-brand.querySelector("img").src=LOGO;
+brand.querySelector("img").src=LOGO;document.querySelectorAll(".hlogo").forEach(i=>i.src=LOGO);
 function setSite(v){
   brand.setAttribute("aria-expanded",v);brand.setAttribute("aria-label",v?"Close":"About byGrain©");tip.hidden=true;
   if(v){site.hidden=false;site.scrollTop=0;requestAnimationFrame(()=>site.classList.add("open"))}

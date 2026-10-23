@@ -172,6 +172,20 @@ body{overflow:hidden}
 #lang button:hover{opacity:.85}
 #lang span{opacity:.45}
 @media (max-width:600px){#lang{bottom:calc(86px + env(safe-area-inset-bottom,0px));left:calc(14px + env(safe-area-inset-left,0px))}}
+
+/* client ticker */
+.clients-strip{position:relative;overflow:hidden;margin:-8px 0 18px;padding-block:10px;border-block:1px solid var(--line);
+  -webkit-mask:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);mask:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.clients-track{display:flex;width:max-content;gap:0;animation:clients 46s linear infinite}
+.clients-strip:hover .clients-track,.clients-strip:focus-within .clients-track{animation-play-state:paused}
+@keyframes clients{to{transform:translateX(-50%)}}
+.clients-track button{background:none;border:0;padding:4px 18px;font-family:"Exposure Light",var(--display);font-size:20px;color:var(--mute);cursor:pointer;white-space:nowrap;transition:color .2s}
+.clients-track button:hover,.clients-track button[aria-pressed="true"]{color:var(--paper)}
+.clients-track button[aria-pressed="true"]{text-decoration:underline;text-underline-offset:4px}
+.clients-track .dot{color:var(--line);align-self:center}
+.filter-note{display:flex;gap:12px;align-items:center;margin:0 0 12px;font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.filter-note button{background:none;border:0;padding:2px 0;font:inherit;letter-spacing:inherit;text-transform:inherit;color:var(--paper);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+@media (prefers-reduced-motion:reduce){.clients-track{animation:none}.clients-strip{overflow-x:auto}}
 #tip i{display:none!important}
 #tip{padding-left:12px!important;padding-right:12px!important}
 #tip{position:fixed;z-index:30;pointer-events:none;background:var(--paper);color:var(--ink);padding:6px 10px 6px 8px;border-radius:999px;font-size:13px;font-weight:500;display:flex;gap:8px;align-items:center;white-space:nowrap;transform:translate(14px,14px)}
@@ -295,6 +309,8 @@ dd{margin:0;font-size:15px}
         <h2>Releases</h2>
         <a class="label ext" href="https://www.youtube.com/playlist?list=PLVhfLWZYid6S9jJNAF8yoO8K44bNmpxk4" target="_blank" rel="noopener">Full playlist on YouTube ↗</a>
       </div>
+      <div class="clients-strip" aria-label="Artists and brands we have worked with"><div class="clients-track" id="clientsTrack"></div></div>
+      <div class="filter-note" id="filterNote" hidden><span></span><button type="button" id="clearFilter">Clear filter</button></div>
       <ul class="index" id="indexList"></ul>
       <button class="show-all" id="showAll" type="button" aria-pressed="false"></button>
     </div>
@@ -319,7 +335,6 @@ dd{margin:0;font-size:15px}
         <div><h3>Mário ARV</h3><p>Director, Editor, Designer</p></div>
         <div><h3>Tomás Freitas</h3><p>Director, Creative Writer</p></div>
       </div>
-      <div class="clients" aria-label="Artists and brands we have worked with"><span>ATJ</span><span>Chico da Tina</span><span>Sippinpurpp</span><span>Yuri NR5</span><span>Van Zee</span><span>FRANKIEONTHEGUITAR</span><span>xtinto</span><span>Lucas Maia</span><span>WTF</span></div>
     </div>
   </section>
 
@@ -553,7 +568,7 @@ const PT={
 "← Prev":"← Anterior","Next →":"Seguinte →","Watch on YouTube ↗":"Ver no YouTube ↗","Start a project":"Começar um projeto",
 "Esc to close · ← → for other projects":"Esc para fechar · ← → para outros projetos",
 "Type":"Tipo","Released":"Lançado","Music video":"Videoclipe","Commercial":"Anúncio","Album trailer":"Trailer do álbum",
-"Show main releases only":"Mostrar só os principais",
+"Show main releases only":"Mostrar só os principais","Clear filter":"Limpar filtro",
 "Black tee":"T-shirt preta","Blue tee":"T-shirt azul","Red tee":"T-shirt vermelha","White tee":"T-shirt branca","Coming soon":"Em breve",
 /* screen-reader labels */
 "byGrain©, open menu":"byGrain©, abrir menu","byGrain© merch store":"Loja de merch byGrain©","Leave the store":"Sair da loja",
@@ -589,6 +604,7 @@ function applyLang(){
   document.querySelectorAll("[aria-label]").forEach(el=>{if(el.closest(".card"))return;if(!el.dataset.enLabel)el.dataset.enLabel=el.getAttribute("aria-label");el.setAttribute("aria-label",T(el.dataset.enLabel))});
   document.querySelectorAll("#lang button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.l===LANG));
   /* re-render the parts built by script */
+  if(typeof setClient==="function"&&clientFilter)setClient(clientFilter);
   if(typeof renderList==="function")renderList();
   if(typeof proj!=="undefined"&&!proj.hidden)fill(cur);
   const sb=document.getElementById("sendBtn");if(sb&&!sb.disabled)sb.textContent=T(SEND_FORM?"Send message":"Prepare message");
@@ -778,10 +794,29 @@ addEventListener("keydown",e=>{
     if(e.shiftKey&&document.activeElement===a){z.focus();e.preventDefault()}else if(!e.shiftKey&&document.activeElement===z){a.focus();e.preventDefault()}}
 });
 
+
+/* ---------- clients ticker + filter ---------- */
+const artistsOf=p=>p.artist.split(/\s+(?:&|x|with)\s+/).map(s=>s.trim()).filter(Boolean);
+let clientFilter=null;
+(function(){
+  const seen=new Map();PROJECTS.forEach(p=>artistsOf(p).forEach(a=>{if(!seen.has(a))seen.set(a,0);seen.set(a,seen.get(a)+1)}));
+  const names=[...seen.keys()];
+  const track=document.getElementById("clientsTrack");
+  const row=(hidden)=>names.map(n=>`<button type="button" data-c="${n.replace(/"/g,"&quot;")}"${hidden?' tabindex="-1" aria-hidden="true"':''}>${n}</button><span class="dot" aria-hidden="true">·</span>`).join("");
+  track.innerHTML=row(false)+row(true); /* doubled for a seamless loop */
+  track.addEventListener("click",e=>{const b=e.target.closest("button[data-c]");if(!b)return;setClient(clientFilter===b.dataset.c?null:b.dataset.c)});
+})();
+function setClient(c){
+  clientFilter=c;document.querySelectorAll("#clientsTrack button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.c===c));
+  const note=document.getElementById("filterNote");note.hidden=!c;
+  if(c)note.querySelector("span").textContent=(LANG==="pt"?"A mostrar lançamentos de ":"Showing releases for ")+c;
+  renderList();
+}
+document.getElementById("clearFilter").onclick=()=>setClient(null);
 /* ---------- index ---------- */
 const list=document.getElementById("indexList"),allBtn=document.getElementById("showAll");let showAll=false;
 function renderList(){
-  const ids=PROJECTS.map((p,i)=>i).filter(i=>showAll||PROJECTS[i].main);
+  const ids=PROJECTS.map((p,i)=>i).filter(i=>clientFilter?artistsOf(PROJECTS[i]).includes(clientFilter):(showAll||PROJECTS[i].main));
   list.innerHTML="";
   ids.forEach(i=>{
     const p=PROJECTS[i],li=document.createElement("li");
@@ -791,7 +826,7 @@ function renderList(){
     list.appendChild(li);
   });
   allBtn.textContent=showAll?T("Show main releases only"):(LANG==="pt"?`Mostrar todos os lançamentos (${PROJECTS.length})`:`Show all releases (${PROJECTS.length})`);
-  allBtn.setAttribute("aria-pressed",showAll);
+  allBtn.setAttribute("aria-pressed",showAll);allBtn.hidden=!!clientFilter;
 }
 allBtn.onclick=()=>{showAll=!showAll;renderList()};
 renderList();

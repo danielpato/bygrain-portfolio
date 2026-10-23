@@ -541,6 +541,9 @@ PROJECTS.forEach(p=>{
 });
 const MAIN=["PJ9wyxCeK1o","ltvpS2cf9h8","vgCRpYvdAi8","2ojGZKJhEvU","pRyx3Q-TEE8","sciO6ntzLEo","U7edHPK4bb4","B7VOs2LPC-Q","qZT29M_AI18","bsFt4hJeePU","W8r524jHx-E","Scaq1Yo8eeo","EIyW1yDWYWU","7s7I8WxLWMo"];
 PROJECTS.forEach(p=>p.main=MAIN.includes(p.yt));
+/* YouTube view counts, 23 Oct 2026; the releases list is ordered by these */
+const VIEWS={"aiChY3jsG6s":42289,"8RzW-fj0gAI":29844,"wKOoOb_tv20":35821,"FZgvb9HioW0":50221,"vTycaytU1II":86191,"pRyx3Q-TEE8":2081589,"bsFt4hJeePU":172973,"liMYJqi94lg":107084,"lOrkGwpQNzQ":3139,"oMvZfZH0GoA":238643,"HN3cDi1qZFA":22239,"PdrtvzBO17E":74268,"vgCRpYvdAi8":226138,"7s7I8WxLWMo":243381,"HdsA7GkAASo":57734,"iVH0_Aq6lw4":8014,"rvyHDXUEgn4":568617,"4v_Jt6hxM1w":108780,"JHAiRlHhkw8":32621,"ltvpS2cf9h8":349951,"sciO6ntzLEo":3203813,"2wDVsoNqhO8":61883,"RUXW835MGdk":119313,"qZT29M_AI18":54878,"xbV0k6arhw4":42086,"U7edHPK4bb4":2349056,"F11eg4khm-4":61143,"vi0didVAqjU":132979,"2EGRQgnne6Q":123522,"PJ9wyxCeK1o":1984168,"Scaq1Yo8eeo":220372,"Cj1FZJKekxQ":72967,"2ojGZKJhEvU":5277006,"W8r524jHx-E":4234532,"-UPNVRV8nXQ":127246,"B7VOs2LPC-Q":221124,"IPQei0JsNGw":22118,"EIyW1yDWYWU":76080};
+
 const pic=p=>p.m?LOOPS[p.m]:THUMBS[p.yt];
 
 
@@ -823,7 +826,7 @@ document.getElementById("clearFilter").onclick=()=>setClient(null);
 /* ---------- index ---------- */
 const list=document.getElementById("indexList"),allBtn=document.getElementById("showAll");let showAll=false;
 function renderList(){
-  const ids=PROJECTS.map((p,i)=>i).filter(i=>clientFilter?artistsOf(PROJECTS[i]).includes(clientFilter):(showAll||PROJECTS[i].main));
+  const ids=PROJECTS.map((p,i)=>i).filter(i=>clientFilter?artistsOf(PROJECTS[i]).includes(clientFilter):(showAll||PROJECTS[i].main)).sort((a,b)=>(VIEWS[PROJECTS[b].yt]||0)-(VIEWS[PROJECTS[a].yt]||0));
   list.innerHTML="";
   ids.forEach(i=>{
     const p=PROJECTS[i],li=document.createElement("li");

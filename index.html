@@ -662,7 +662,26 @@ function build(){
   const counts=Array(cols).fill(1);let extra=N-cols;while(extra>0){const i=(r()*cols)|0;if(counts[i]<2){counts[i]++;extra--}}
   const weights=Array.from({length:cols},()=>store?1:.7+r()*.8),sum=weights.reduce((a,b)=>a+b,0);
   let acc=0;
-  for(let i=0;i<cols;i++){
+  if(!store){
+    /* every frame the same height, each at its own ratio: columns get room in proportion to their widest frame */
+    const colAR=[];let k0=0;for(let i=0;i<cols;i++){let m=0;for(let j=0;j<counts[i];j++)m=Math.max(m,arOf(PROJECTS[LIST[k0+j]]));colAR.push(m);k0+=counts[i]}
+    const wts=colAR.map(a=>a*(.9+r()*.35)),ws=wts.reduce((a,b)=>a+b,0);
+    const arcs=wts.map(w=>w/ws*Math.PI*2),colWs=arcs.map(a=>2*R*Math.sin(a/2)-gap);
+    const FH=Math.min(H*(narrow?.4:.42),...colWs.map((w,i)=>w*.88/colAR[i]));
+    for(let i=0;i<cols;i++){
+      const mid=acc+arcs[i]/2;acc+=arcs[i];const colW=colWs[i],n=counts[i];
+      const gaps=Array.from({length:n-1},()=>gap*(1.5+r()*4));
+      const span=n*FH+gaps.reduce((a,b)=>a+b,0);
+      let y=-span/2+(r()-.5)*H*(n===1?.5:.3);         // column slides up or down
+      for(let j=0;j<n;j++){
+        const w=FH*arOf(PROJECTS[LIST[placed.length]]);
+        const x=mid*R+(colW-w)*(r()-.5);                 // nudge within the column
+        placed.push({x,y,w,h:FH,dz:(r()-.4)*R*.08});
+        y+=FH+(gaps[j]||0);
+      }
+    }
+  }
+  else for(let i=0;i<cols;i++){
     const arc=weights[i]/sum*Math.PI*2,mid=acc+arc/2;acc+=arc;
     const colW=2*R*Math.sin(arc/2)-gap;
     const n=counts[i];

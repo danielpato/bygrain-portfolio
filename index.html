@@ -725,7 +725,9 @@ function render(){
   }
 }
 let hoverCard=null;
-stage.addEventListener("pointerover",e=>{if(e.pointerType==="touch")return;hoverCard=e.target.closest(".card")});
+/* only a real mouse movement onto a frame counts; frames drifting under a still cursor don't stop the ring */
+stage.addEventListener("pointermove",e=>{if(e.pointerType==="touch"||(!e.movementX&&!e.movementY))return;hoverCard=e.target.closest(".card")});
+stage.addEventListener("pointerout",e=>{if(hoverCard&&e.target.closest(".card")===hoverCard&&!hoverCard.contains(e.relatedTarget))hoverCard=null});
 stage.addEventListener("pointerleave",()=>{hoverCard=null});
 function loop(){
   const dz=zoomT-zoom;zoom+=dz*(pinch0?.35:.12);

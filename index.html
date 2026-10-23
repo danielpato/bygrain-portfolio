@@ -890,9 +890,14 @@ function setStore(v){
   if(!site.hidden)setSite(false);if(!proj.hidden)closeProject();
   setOpen(false);document.documentElement.classList.toggle("store",v);storeBtn.classList.toggle("on",v);
   storeBtn.setAttribute("aria-pressed",v);storeBtn.querySelector(".dock-tip").textContent=v?"byGrain©":"Store";storeBtn.setAttribute("aria-label",v?"Leave the store":"byGrain© merch store");
+  if(typeof LIVE_URLS!=="undefined"&&LIVE_URLS)history.replaceState(null,"",v?"/shop":"/");
   setTimeout(()=>{store=v;build();setOpen(true);storeBusy=false},reduce?0:650);
 }
 storeBtn.addEventListener("click",e=>{e.preventDefault();setStore(!store)});
+/* bygrain.com/shop opens straight into store mode; the address follows the mode on the live site */
+const LIVE_URLS=location.protocol.startsWith("http")&&SEND_FORM;
+if(LIVE_URLS&&/^\/shop\/?$/.test(location.pathname)){store=true;document.documentElement.classList.add("store");storeBtn.classList.add("on");
+  storeBtn.setAttribute("aria-pressed",true);storeBtn.setAttribute("aria-label","Leave the store");storeBtn.querySelector(".dock-tip").textContent="byGrain©"}
 addEventListener("keydown",e=>{if(e.key==="Escape"&&store&&proj.hidden&&site.hidden)setStore(false)});
 /* boot */
 let pageHidden=document.hidden;document.addEventListener("visibilitychange",()=>{pageHidden=document.hidden;render()});

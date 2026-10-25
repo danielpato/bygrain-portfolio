@@ -191,7 +191,8 @@ html.frozen .gscope.baked .glow{animation-play-state:paused}
 .card .shade{position:absolute;inset:0;background:#000;pointer-events:none}
 .card:hover .shade,.card:focus-visible .shade{opacity:0!important}
 .card:not(.merch) .shade{display:none}
-.card:not(.merch):hover,.card:not(.merch):focus-visible{opacity:1!important}
+.card:not(.merch){background:#000}
+.card:not(.merch):hover img,.card:not(.merch):hover video,.card:not(.merch):focus-visible img,.card:not(.merch):focus-visible video{opacity:1!important}
 .card:focus-visible{outline:4px solid var(--signal);outline-offset:-4px}
 .stage-foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-block:6px 40px;border-bottom:1px solid var(--line)}
 .stage-foot .ctrls{display:flex;gap:8px}
@@ -744,9 +745,9 @@ function build(){
         b.innerHTML=`<img alt="" draggable="false" src="${m.src}"><div class="shade"></div>`;}
       else{const pi=LIST[k],p=PROJECTS[pi];b.dataset.p=pi;b.setAttribute("aria-label",`${p.t} by ${p.artist}, ${p.year}`);
         b.innerHTML=(EMBED_YT&&VLOOP[p.m]&&!reduce&&!QS.has("still"))?`<img class="vstill" alt="" draggable="false" src="/media/stills/${p.m}.webp"><video src="${VLOOP[p.m]}" poster="${pic(p)}" muted loop playsinline disablepictureinpicture preload="auto"></video><div class="shade"></div>`:`<img alt="" draggable="false" src="${hiPic(p)}"><div class="shade"></div>`;}
-      const vid=b.querySelector("video");if(vid)vid.onerror=()=>{const im=new Image();im.alt="";im.draggable=false;im.src=vid.poster;vid.replaceWith(im);const c=cards.find(c=>c.el===b);if(c){c.img=im;c.vid=null}};
+      const vid=b.querySelector("video");if(vid)vid.onerror=()=>{const im=new Image();im.alt="";im.draggable=false;im.src=vid.poster;vid.replaceWith(im);const c=cards.find(c=>c.el===b);if(c){c.img=im;c.vid=null;c.media=[...b.querySelectorAll("img")];c.o=null}};
       ring.appendChild(b);
-      cards.push({vid:b.querySelector("video"),el:b,theta:q.x/R,y:q.y,dz:q.dz,k:k/placed.length,shade:b.lastChild,img:b.firstChild,merch:store});
+      cards.push({media:[...b.querySelectorAll("img,video")],vid:b.querySelector("video"),el:b,theta:q.x/R,y:q.y,dz:q.dz,k:k/placed.length,shade:b.lastChild,img:b.firstChild,merch:store});
   });
   core=document.createElement("div");core.id="core";
   core.style.setProperty("--gw",(R*.83)+"px");core.style.setProperty("--fs",(R*(narrow?.62:.54))+"px");core.style.setProperty("--noise",NOISE);core.style.setProperty("--specks",NOISE.replace("baseFrequency='.55'","baseFrequency='.8'").replace("2.6 -.95","5 -3.3"));
@@ -813,13 +814,14 @@ function render(){
   /* the glow is re-centred on the logo only when the ring's tilt or zoom changes, so it never follows the cursor */
   if(flatGlow&&logoCv){const key=tz.toFixed(2)+"|"+zoom.toFixed(3)+"|"+R+"|"+logoCv.width+"|"+logoCv.height;if(key!==glowKey){glowKey=key;const tf=logoCv.style.transform;logoCv.style.transform="perspective(700px) rotateY(0deg) rotateX(0deg)";const b=logoCv.getBoundingClientRect(),sr=stage.getBoundingClientRect();logoCv.style.transform=tf;flatGlow.style.left=(b.left+b.width/2-sr.left)+"px";flatGlow.style.top=(b.top+b.height/2-sr.top)+"px";flatGlow.style.setProperty("--z",zoom.toFixed(3));flatGlow.classList.toggle("hires",zoom>1.2);if(zoom>1.2)ensureGlowHi()}}
   for(const c of cards){
-    const t=Math.min(1,Math.max(0,reveal*1.8-c.k*.8)),e=1-Math.pow(1-t,3);
+    let t=Math.min(1,Math.max(0,reveal*1.8-c.k*.8));if(t>.995)t=1;const e=1-Math.pow(1-t,3);
     c.el.style.transform=`rotateY(${c.theta}rad) translateZ(${(R+c.dz)*e*zoom}px) translateY(${c.y*e*(zoom<1?zoom:.55+.45*zoom)}px) scale(${(.25+.75*e)*(zoom<1?zoom:1+.5*(zoom-1))/CS})`;
     c.el.style.opacity=t.toFixed(3);c.el.style.pointerEvents=t>.9?"":"none";
     const z=Math.cos(c.theta+angle),dim=(1-z)/2*.78;
     /* full-quality video only on the front half of the ring; behind it, the frame shows a still image and the video is switched off */
-    if(c.vid){const want=z>0;if(want!==!!c.live){c.live=want;c.el.classList.toggle("live",want);if(want){const pr=c.vid.play();if(pr)pr.catch(()=>{})}else c.vid.pause()}}/* frames turned away are dimmed by fading them against the dark stage (a black overlay on top cost twice as much to draw); facing frames stay fully opaque */
-    if(c.merch)c.img.style.opacity=(1-dim).toFixed(3);else c.el.style.opacity=(t*(dim<.04?1:1-dim)).toFixed(3);
+    if(c.vid){const want=z>0;if(want!==!!c.live){c.live=want;c.el.classList.toggle("live",want);if(want){const pr=c.vid.play();if(pr)pr.catch(()=>{})}else c.vid.pause()}}/* frames turned away are dimmed by fading the picture against the frame's own black backing: the frame stays solid (nothing shows through),
+       and it costs far less than the old black overlay on top */
+    if(c.merch)c.img.style.opacity=(1-dim).toFixed(3);else{const o=(dim<.02?1:1-dim).toFixed(3);if(o!==c.o){c.o=o;for(const m of c.media)m.style.opacity=o}}
   }
 }
 let hoverCard=null,hoverSince=0,hitTick=0;
@@ -842,7 +844,7 @@ function loop(now){
   if(hoverCard&&ptrX>=0&&(++hitTick%4===0)){const el=document.elementFromPoint(ptrX,ptrY);if(!el||el.closest(".card")!==hoverCard)hoverCard=null}
   let hold=false;if(hoverCard&&!dragging&&!store){const c=cards.find(c=>c.el===hoverCard);if(c){const ph=c.theta+angle;hold=Math.cos(ph)>0&&Math.abs(Math.sin(ph))<=.6&&now-hoverSince>180}}
   if(!dragging){ /* one smooth ease toward the target speed: no abrupt brake or slow crawl back, so brushing past frames never jolts the spin */
-    const tgt=(hold||paused)?0:auto;vel+=(tgt-vel)*Math.min(1,(hold?.14:paused?.08:.035)*fr); angle+=vel*fr; tilt+=(TILT-tilt)*.05; reveal+=((opened?1:0)-reveal)*.035; render(); }
+    const tgt=(hold||paused)?0:auto;vel+=(tgt-vel)*Math.min(1,(hold?.14:paused?.08:.035)*fr); angle+=vel*fr; tilt+=(TILT-tilt)*.05; reveal+=((opened?1:0)-reveal)*.035;if(Math.abs((opened?1:0)-reveal)<.002)reveal=opened?1:0; render(); }
   else if(Math.abs(dz)>.0005)render();
   requestAnimationFrame(loop);
 }

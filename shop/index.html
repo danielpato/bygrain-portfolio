@@ -164,12 +164,21 @@ html,body{height:100%}
 body{overflow:hidden}
 #core .word:hover,#core .word:focus-visible{scale:1.02;filter:drop-shadow(0 0 22px rgba(0,0,255,.75)) drop-shadow(0 0 4px rgba(160,160,255,.4))}
 #core .word:focus-visible{outline:none}
+#core .word,#core .word:hover,#core .word:focus-visible{filter:none}
+html.store #core .word,html.store #core .word:hover,html.store #core .word:focus-visible{filter:invert(1)}
+#core .wshadow{position:absolute;left:50%;top:50%;translate:-50% -50%;pointer-events:none;max-width:none;transition:opacity .7s ease}
+#core .wshadow.hov{opacity:0;transition:none}
+html.store #core .wshadow{opacity:0!important}
 .gscope .glow.specks{background:radial-gradient(closest-side,rgba(110,110,255,.95),rgba(0,0,255,.6) 50%,rgba(0,0,255,0) 90%);-webkit-mask:var(--specks);mask:var(--specks);-webkit-mask-size:260px;mask-size:260px;animation:breathe 6s ease-in-out infinite,grain .45s steps(1) infinite reverse}
 .gscope.hires .glow{-webkit-mask-image:var(--noise-hi);mask-image:var(--noise-hi)}
 .gscope.hires .glow.specks{-webkit-mask-image:var(--specks-hi);mask-image:var(--specks-hi)}
 .gscope.hires .glow.soft{-webkit-mask-image:none;mask-image:none}
 html.noglow .gscope .glow{animation:none!important}
 html.frozen .gscope .glow{animation-play-state:paused!important}
+.gscope.baked .glow,.gscope.baked .glow.specks,.gscope.baked.hires .glow,.gscope.baked.hires .glow.specks{-webkit-mask:none!important;mask:none!important;background:none!important;filter:none!important;animation:breathe 6s ease-in-out infinite}
+.gscope.baked .glow .gframe{position:absolute;inset:0;width:100%;height:100%;display:block}
+.gscope.baked .glow .gframe.soft{inset:-60px;width:calc(100% + 120px);height:calc(100% + 120px)}
+html.frozen .gscope.baked .glow{animation-play-state:paused}
 .gscope .glow.soft{-webkit-mask:none;mask:none;filter:blur(30px);opacity:.55}
 .gscope .halo{position:absolute;left:50%;top:50%;translate:-50% -50%;pointer-events:none;max-width:none}
 #core .word{pointer-events:auto;cursor:pointer;transition:scale .3s ease,filter .3s ease;position:absolute;left:50%;top:50%;translate:-50% -50%;transform-origin:50% 50%;width:var(--fs);max-width:none;height:auto;filter:drop-shadow(0 0 18px rgba(0,0,255,.4)) drop-shadow(0 0 3px rgba(120,120,255,.2))}
@@ -181,6 +190,8 @@ html.frozen .gscope .glow{animation-play-state:paused!important}
 .card img,.card video{display:block;width:100%;height:100%;max-width:none;object-fit:cover;pointer-events:none;background:var(--ink-2)}
 .card .shade{position:absolute;inset:0;background:#000;pointer-events:none}
 .card:hover .shade,.card:focus-visible .shade{opacity:0!important}
+.card:not(.merch) .shade{display:none}
+.card:not(.merch):hover,.card:not(.merch):focus-visible{opacity:1!important}
 .card:focus-visible{outline:4px solid var(--signal);outline-offset:-4px}
 .stage-foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-block:6px 40px;border-bottom:1px solid var(--line)}
 .stage-foot .ctrls{display:flex;gap:8px}
@@ -739,7 +750,7 @@ function build(){
   });
   core=document.createElement("div");core.id="core";
   core.style.setProperty("--gw",(R*.83)+"px");core.style.setProperty("--fs",(R*(narrow?.62:.54))+"px");core.style.setProperty("--noise",NOISE);core.style.setProperty("--specks",NOISE.replace("baseFrequency='.55'","baseFrequency='.8'").replace("2.6 -.95","5 -3.3"));
-  core.innerHTML='<div class="gwrap"><div class="glow soft"></div><div class="glow"></div><div class="glow specks"></div></div><canvas class="halo" aria-hidden="true"></canvas><canvas class="word" role="button" tabindex="0" aria-label="byGrain©, open menu"></canvas>';
+  core.innerHTML='<div class="gwrap"><div class="glow soft"></div><div class="glow"></div><div class="glow specks"></div></div><canvas class="halo" aria-hidden="true"></canvas><canvas class="wshadow" aria-hidden="true"></canvas><canvas class="wshadow hov" aria-hidden="true"></canvas><canvas class="word" role="button" tabindex="0" aria-label="byGrain©, open menu"></canvas>';
   core.classList.add("gscope");
   /* phones: draw the glow as a flat light behind the ring so steep tilts can't slice it through the frames */
   let fg=document.getElementById("flatGlow");if(fg)fg.remove();flatGlow=null;
@@ -747,27 +758,68 @@ function build(){
     ["--gw","--noise","--specks"].forEach(k=>fg.style.setProperty(k,core.style.getPropertyValue(k)));
     /* a 2x-resolution copy of the same grain (twice the tile, half the frequency), swapped in only when zoomed in */
     const hi=v=>v.replace(/width='180' height='180'/,"width='360' height='360'").replace("baseFrequency='.55'","baseFrequency='.275'").replace("baseFrequency='.8'","baseFrequency='.4'");
-    fg.style.setProperty("--noise-hi",hi(core.style.getPropertyValue("--noise")));fg.style.setProperty("--specks-hi",hi(core.style.getPropertyValue("--specks")));fg.appendChild(gw);stage.insertBefore(fg,ring);flatGlow=fg}
-  ring.appendChild(core);logoCv=core.querySelector(".word");haloCv=core.querySelector(".halo");logoW=0;if(typeof drawLogo==="function")requestAnimationFrame(()=>drawLogo(performance.now()));
+    fg.style.setProperty("--noise-hi",hi(core.style.getPropertyValue("--noise")));fg.style.setProperty("--specks-hi",hi(core.style.getPropertyValue("--specks")));fg.appendChild(gw);stage.insertBefore(fg,ring);flatGlow=fg;bakeGlow(fg)}
+  ring.appendChild(core);logoCv=core.querySelector(".word");haloCv=core.querySelector(".halo");shadowCvs=[...core.querySelectorAll(".wshadow")];logoW=0;if(typeof drawLogo==="function")requestAnimationFrame(()=>drawLogo(performance.now()));
   render();
 }
 let TILT=-15,coreZ=0,flatGlow=null,ZOOM_TILT=9;let tilt=TILT,core=null,reveal=0,opened=false,zoom=1,zoomT=1;const hint=document.getElementById("hint");
 function setOpen(v){opened=v;hint.style.opacity=v?0:1;cards.forEach(c=>c.el.tabIndex=v?0:-1);if(reduce)reveal=v?1:0;tip.hidden=true}
 const NOISE="url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2.6 -.95'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
 let glowKey="";
+/* The blue glow used to be three big layers with live CSS masks whose position jumped ~15 times a second,
+   which forced the browser to repaint them constantly. Now the same gradients x the same noise are drawn once
+   into a few frames, and a timer just swaps which frame is shown (masks off, no repaint of big layers). */
+const GLOW_POS=[[0,0],[-47,23],[61,-38],[-19,-71],[88,54],[-73,9],[31,82],[-102,-26]];
+const urlOf=v=>{const m=/url\("?(.*?)"?\)$/.exec(v.trim().replace(/\\"/g,'"'));return m?m[1].replace(/\\"/g,'"'):""};
+function loadImg(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src})}
+let glowTimers=[],glowSets=null;
+async function bakeGlow(fg){
+  glowTimers.forEach(clearInterval);glowTimers=[];glowSets=null;
+  if(reduce||QS.has("noglow"))return;
+  const gw=parseFloat(fg.style.getPropertyValue("--gw"))||300,W=gw*1.7,H=gw*.6,k=Math.min(2,devicePixelRatio||1);
+  const cw=Math.round(W*k),ch=Math.round(H*k);
+  const grad=(x,stops)=>{const g=x.createRadialGradient(cw/2,cw/2,0,cw/2,cw/2,cw/2);stops.forEach(([o,c])=>g.addColorStop(o,c));return g};
+  const ell=(x,stops)=>{x.save();x.setTransform(1,0,0,ch/cw,0,ch/2-cw/2*ch/cw);x.fillStyle=grad(x,stops);x.fillRect(0,0,cw,cw);x.restore()};
+  const MAIN=[[0,"rgba(40,40,255,.45)"],[.45,"rgba(0,0,255,.22)"],[1,"rgba(0,0,255,0)"]],SPK=[[0,"rgba(110,110,255,.95)"],[.5,"rgba(0,0,255,.6)"],[.9,"rgba(0,0,255,0)"],[1,"rgba(0,0,255,0)"]];
+  const make=async(noiseVar,tile,stops,idx)=>{const img=await loadImg(urlOf(fg.style.getPropertyValue(noiseVar)));if(!img)return null;
+    /* render the noise at its on-screen tile size (as the CSS mask did) rather than stretching a small bitmap */
+    const tileC=document.createElement("canvas");tileC.width=tileC.height=Math.round(tile*k);tileC.getContext("2d").drawImage(img,0,0,tileC.width,tileC.height);
+    return idx.map(i=>{const c=document.createElement("canvas");c.width=cw;c.height=ch;const x=c.getContext("2d");ell(x,stops);
+      x.globalCompositeOperation="destination-in";const p=x.createPattern(tileC,"repeat"),[ox,oy]=GLOW_POS[i];
+      p.setTransform(new DOMMatrix([1,0,0,1,ox*k,oy*k]));x.fillStyle=p;x.fillRect(0,0,cw,ch);return c})};
+  const sets={lo:{main:await make("--noise",320,MAIN,[0,2,4,6]),spk:await make("--specks",260,SPK,[7,5,3,1])},hi:null,make,MAIN,SPK};
+  if(!sets.lo.main||!sets.lo.spk||fg!==flatGlow)return;
+  /* soft layer: the same gradient blurred once instead of a live 30px blur */
+  const pad=Math.round(60*k),soft=document.createElement("canvas");soft.width=cw+pad*2;soft.height=ch+pad*2;
+  {const x=soft.getContext("2d"),t=document.createElement("canvas");t.width=cw;t.height=ch;ell(t.getContext("2d"),MAIN);x.filter=`blur(${30*k}px)`;x.drawImage(t,pad,pad)}
+  const els=fg.querySelectorAll(".glow");const [eSoft,eMain,eSpk]=[els[0],els[1],els[2]];
+  const disp=(el,c0)=>{const c=document.createElement("canvas");c.className="gframe";c.width=c0.width;c.height=c0.height;c.getContext("2d").drawImage(c0,0,0);el.appendChild(c);return c};
+  soft.className="gframe soft";eSoft.appendChild(soft);
+  const dMain=disp(eMain,sets.lo.main[0]),dSpk=disp(eSpk,sets.lo.spk[0]);fg.classList.add("baked");glowSets=sets;
+  let a=0,b=0;const show=(d,c)=>{const x=d.getContext("2d");x.clearRect(0,0,d.width,d.height);x.drawImage(c,0,0,d.width,d.height)};
+  const pick=()=>(zoom>1.2&&sets.hi)?sets.hi:sets.lo;
+  glowTimers.push(setInterval(()=>{if(frozen||document.hidden)return;const S=pick();a=(a+1)%S.main.length;show(dMain,S.main[a])},150));
+  glowTimers.push(setInterval(()=>{if(frozen||document.hidden)return;const S=pick();b=(b+1)%S.spk.length;show(dSpk,S.spk[b])},112));
+}
+/* sharper grain when zoomed in: built once, the first time someone zooms */
+let glowHiBusy=false;
+async function ensureGlowHi(){if(!glowSets||glowSets.hi||glowHiBusy||!flatGlow)return;glowHiBusy=true;
+  const fg=flatGlow,sets=glowSets;const mk=async(v,tile,stops,idx)=>{const saved=fg.style.getPropertyValue(v);fg.style.setProperty(v,fg.style.getPropertyValue(v+"-hi"));const r=await sets.make(v,tile,stops,idx);fg.style.setProperty(v,saved);return r};
+  const main=await mk("--noise",320,sets.MAIN,[0,2,4,6]),spk=await mk("--specks",260,sets.SPK,[7,5,3,1]);if(main&&spk&&glowSets===sets)sets.hi={main,spk};glowHiBusy=false}
 function render(){
   const tz=tilt+Math.max(0,zoom-1)*ZOOM_TILT; /* zooming in eases the ring up toward eye level */
   ring.style.transform=`translateZ(${-R*1.05}px) rotateX(${tz}deg) rotateY(${angle}rad)`;
   if(core){core.style.transform=`rotateY(${-angle}rad) rotateX(${-tz}deg) translateZ(${coreZ}px)`;core.style.setProperty("--z",zoom.toFixed(3))}
   /* the glow is re-centred on the logo only when the ring's tilt or zoom changes, so it never follows the cursor */
-  if(flatGlow&&logoCv){const key=tz.toFixed(2)+"|"+zoom.toFixed(3)+"|"+R+"|"+logoCv.width+"|"+logoCv.height;if(key!==glowKey){glowKey=key;const tf=logoCv.style.transform;logoCv.style.transform="perspective(700px) rotateY(0deg) rotateX(0deg)";const b=logoCv.getBoundingClientRect(),sr=stage.getBoundingClientRect();logoCv.style.transform=tf;flatGlow.style.left=(b.left+b.width/2-sr.left)+"px";flatGlow.style.top=(b.top+b.height/2-sr.top)+"px";flatGlow.style.setProperty("--z",zoom.toFixed(3));flatGlow.classList.toggle("hires",zoom>1.2)}}
+  if(flatGlow&&logoCv){const key=tz.toFixed(2)+"|"+zoom.toFixed(3)+"|"+R+"|"+logoCv.width+"|"+logoCv.height;if(key!==glowKey){glowKey=key;const tf=logoCv.style.transform;logoCv.style.transform="perspective(700px) rotateY(0deg) rotateX(0deg)";const b=logoCv.getBoundingClientRect(),sr=stage.getBoundingClientRect();logoCv.style.transform=tf;flatGlow.style.left=(b.left+b.width/2-sr.left)+"px";flatGlow.style.top=(b.top+b.height/2-sr.top)+"px";flatGlow.style.setProperty("--z",zoom.toFixed(3));flatGlow.classList.toggle("hires",zoom>1.2);if(zoom>1.2)ensureGlowHi()}}
   for(const c of cards){
     const t=Math.min(1,Math.max(0,reveal*1.8-c.k*.8)),e=1-Math.pow(1-t,3);
     c.el.style.transform=`rotateY(${c.theta}rad) translateZ(${(R+c.dz)*e*zoom}px) translateY(${c.y*e*(zoom<1?zoom:.55+.45*zoom)}px) scale(${(.25+.75*e)*(zoom<1?zoom:1+.5*(zoom-1))/CS})`;
     c.el.style.opacity=t.toFixed(3);c.el.style.pointerEvents=t>.9?"":"none";
     const z=Math.cos(c.theta+angle),dim=(1-z)/2*.78;
     /* full-quality video only on the front half of the ring; behind it, the frame shows a still image and the video is switched off */
-    if(c.vid){const want=z>0;if(want!==!!c.live){c.live=want;c.el.classList.toggle("live",want);if(want){const pr=c.vid.play();if(pr)pr.catch(()=>{})}else c.vid.pause()}}if(c.merch)c.img.style.opacity=(1-dim).toFixed(3);else c.shade.style.opacity=dim.toFixed(3);
+    if(c.vid){const want=z>0;if(want!==!!c.live){c.live=want;c.el.classList.toggle("live",want);if(want){const pr=c.vid.play();if(pr)pr.catch(()=>{})}else c.vid.pause()}}/* frames turned away are dimmed by fading them against the dark stage (a black overlay on top cost twice as much to draw); facing frames stay fully opaque */
+    if(c.merch)c.img.style.opacity=(1-dim).toFixed(3);else c.el.style.opacity=(t*(dim<.04?1:1-dim)).toFixed(3);
   }
 }
 let hoverCard=null,hoverSince=0,hitTick=0;
@@ -993,7 +1045,7 @@ addEventListener("keydown",e=>{if(e.key==="Escape"&&proj.hidden&&!site.hidden)se
 
 
 /* ---------- centre logo: flowing opacity waves (50%–80%) ---------- */
-let logoCv=null,logoW=0,logoSolid=null,haloCv=null,haloP=0,haloAt=0,haloR=0,prox=0,proxT=0;const haloTmp=document.createElement("canvas");
+let shadowCvs=[],logoCv=null,logoW=0,logoSolid=null,haloCv=null,haloP=0,haloAt=0,haloR=0,prox=0,proxT=0;const haloTmp=document.createElement("canvas");
 /* "dissolve" outer glow: blur the logo's silhouette, then keep each pixel only if a random draw falls under its glow strength.
    Pre-made: 8 strength levels x 3 random variants, each computed once on first use, then just flipped through (no live pixel work) */
 const HALO_L=8,HALO_V=3;let haloCache=[],haloLast=-1;
@@ -1028,6 +1080,12 @@ function sizeLogo(){
   const im=sx.getImageData(0,0,logoSolid.width,logoSolid.height),dd=im.data;
   for(let k=0;k<dd.length;k+=4){dd[k]=dd[k+1]=dd[k+2]=255;dd[k+3]=Math.min(255,dd[k+3]*4)}
   sx.putImageData(im,0,0);
+  /* the logo's blue glow, blurred once (was two drop-shadow filters recomputed every frame); [rest, hover] */
+  if(shadowCvs.length===2){const pad=Math.round(logoW*.16),SH=[[[18,"rgba(0,0,255,.4)"],[3,"rgba(120,120,255,.2)"]],[[22,"rgba(0,0,255,.75)"],[4,"rgba(160,160,255,.4)"]]];
+    shadowCvs.forEach((c,i)=>{c.width=logoW+pad*2;c.height=logoCv.height+pad*2;c.style.width=(c.width/dpr)+"px";c.style.height=(c.height/dpr)+"px";
+      const x=c.getContext("2d"),a=i?1:.42; /* the resting logo is grainy and only partly opaque, so its glow is weaker */
+      for(const [r,col] of SH[i]){const t=document.createElement("canvas");t.width=c.width;t.height=c.height;const tx=t.getContext("2d");tx.drawImage(logoSolid,pad,pad);tx.globalCompositeOperation="source-in";tx.fillStyle=col;tx.fillRect(0,0,t.width,t.height);
+        x.save();x.globalAlpha=a;x.filter=`blur(${(r/2*dpr).toFixed(1)}px)`;x.drawImage(t,0,0);x.restore()}})}
   /* halo canvas: logo-sized plus padding for the dissolve glow */
   if(haloCv){haloCache=[];haloLast=-1;haloP=Math.round(logoW*.3);haloCv.width=logoW+haloP*2;haloCv.height=logoCv.height+haloP*2;
     haloCv.style.width=(haloCv.width/dpr)+"px";haloCv.style.height=(haloCv.height/dpr)+"px";haloTmp.width=haloCv.width;haloTmp.height=haloCv.height}
@@ -1082,7 +1140,7 @@ if(matchMedia("(hover:hover) and (pointer:fine)").matches&&!reduce){
 function logoLoop(t){
   if(frozen){requestAnimationFrame(logoLoop);return}
   lookX+=(lookTX-lookX)*.08;lookY+=(lookTY-lookY)*.08;
-  if(logoCv){const tf=`perspective(700px) rotateY(${(lookX*14).toFixed(2)}deg) rotateX(${(-lookY*10).toFixed(2)}deg)`;logoCv.style.transform=tf;if(haloCv)haloCv.style.transform=tf+" translateZ(-6px)"}
+  if(logoCv){const tf=`perspective(700px) rotateY(${(lookX*14).toFixed(2)}deg) rotateX(${(-lookY*10).toFixed(2)}deg)`;logoCv.style.transform=tf;if(haloCv)haloCv.style.transform=tf+" translateZ(-6px)";for(const c of shadowCvs)c.style.transform=tf+" translateZ(-3px)";if(shadowCvs[1])shadowCvs[1].style.opacity=logoHov.toFixed(3)}
   drawHalo(t);
   if(!pageHidden&&t-lastLogo>15){lastLogo=t;logoHov+=(logoHovT-logoHov)*.18;if(Math.abs(logoHovT-logoHov)<.005)logoHov=logoHovT;drawLogo(t)}requestAnimationFrame(logoLoop)}
 logoImg.onload=()=>{logoW=0;drawLogo(reduce?0:performance.now());requestAnimationFrame(logoLoop)};

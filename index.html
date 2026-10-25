@@ -229,16 +229,16 @@ section.band{padding-block:72px;border-bottom:1px solid var(--line)}
 /* index */
 .index{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
 .index li{border-bottom:1px solid var(--line)}
-.index button{all:unset;box-sizing:border-box;cursor:pointer;width:100%;display:grid;grid-template-columns:56px minmax(0,1.6fr) minmax(0,1fr) 60px;gap:16px;align-items:center;padding:16px 4px;transition:background .2s,padding .2s}
+.index button{all:unset;box-sizing:border-box;cursor:pointer;width:100%;display:grid;grid-template-columns:44px minmax(0,1.6fr) minmax(0,1fr) 60px;gap:16px;align-items:center;padding:16px 4px;transition:background .2s,padding .2s}
 .index button:hover,.index button:focus-visible{background:var(--ink-2);padding-left:14px}
-.index .sw{width:56px;height:32px;display:flex;align-items:center;justify-content:center}
-.index .sw img{max-width:100%;max-height:100%;width:auto;height:auto;display:block;border-radius:3px}
+.index .sw{width:32px;height:32px;border-radius:4px;overflow:hidden}
+.index .sw img{width:100%;height:100%;object-fit:cover;display:block}
 .index .t{font-family:var(--display);font-size:22px;font-weight:500;letter-spacing:-.02em;min-width:0}
 .index .c,.index .s{color:var(--mute);font-size:14px;min-width:0}
 .show-all{margin-top:18px;background:none;border:0;padding:6px 0;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);opacity:.55;cursor:pointer;transition:opacity .2s}
 .show-all:hover{opacity:1;color:var(--paper)}
 .index .y{font-family:var(--mono);font-size:13px;color:var(--mute);text-align:right;font-variant-numeric:tabular-nums}
-@media (max-width:720px){.index button{grid-template-columns:48px minmax(0,1fr) 48px}.index .sw{width:48px;height:28px}.index .c,.index .s{display:none}.index .t{font-size:19px}}
+@media (max-width:720px){.index button{grid-template-columns:36px minmax(0,1fr) 48px}.index .c,.index .s{display:none}.index .t{font-size:19px}}
 
 /* studio */
 .studio{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:48px}
@@ -577,6 +577,8 @@ const VLOOP={"grandenoamor":"media/grandenoamor-loop.mp4","vicios":"media/vicios
 /* full-resolution stills for the ring (live site: files in media/thumbs; preview: embedded) and every frame's own aspect ratio */
 const HI={"PJ9wyxCeK1o":"media/thumbs/PJ9wyxCeK1o.webp","ltvpS2cf9h8":"media/thumbs/ltvpS2cf9h8.webp","vgCRpYvdAi8":"media/thumbs/vgCRpYvdAi8.webp","2ojGZKJhEvU":"media/thumbs/2ojGZKJhEvU.webp","pRyx3Q-TEE8":"media/thumbs/pRyx3Q-TEE8.webp","U7edHPK4bb4":"media/thumbs/U7edHPK4bb4.webp","B7VOs2LPC-Q":"media/thumbs/B7VOs2LPC-Q.webp","qZT29M_AI18":"media/thumbs/qZT29M_AI18.webp"};
 const LOOP_AR={"nightime":1.7824,"insular":1.3389,"quemestu":1.3389,"pega":2.0084,"fibratv":1.3333,"vicios":1.3389,"grandenoamor":1.4097,"ss":1.3333,"10minutos":1.225,"pressinhas":1.3333,"telefone":1.225,"malvado":1.3333,"atitude":1.0,"assuntomeu":1.6667,"ultimadanca":1.3333,"stupidrich":1.3333,"bravos":1.3333,"tragico":1.3333},THUMB_AR={"PJ9wyxCeK1o":1.7778,"ltvpS2cf9h8":1.7778,"vgCRpYvdAi8":1.7778,"2ojGZKJhEvU":1.7778,"pRyx3Q-TEE8":1.3418,"U7edHPK4bb4":1.7778,"B7VOs2LPC-Q":1.7778,"qZT29M_AI18":1.7778};
+/* releases list: small square thumbnails, low-res stills only (no animation, no full-res files) */
+const listPic=p=>THUMBS[p.yt]||pic(p);
 const hiPic=p=>p.m?LOOPS[p.m]:(HI[p.yt]||THUMBS[p.yt]);
 const arOf=p=>p.m?(LOOP_AR[p.m]||4/3):(THUMB_AR[p.yt]||16/9);
 
@@ -926,7 +928,7 @@ function renderList(){
   ids.forEach(i=>{
     const p=PROJECTS[i],li=document.createElement("li");
     const who=(p.credits.find(c=>/direct/i.test(c[0]))||p.credits[0]||["",""])[1];
-    li.innerHTML=`<button><span class="sw"><img src="${hiPic(p)}" alt="" loading="lazy"></span><span class="t">${p.t}</span><span class="c">${p.artist}</span><span class="y">${p.year}</span></button>`;
+    li.innerHTML=`<button><span class="sw"><img src="${listPic(p)}" alt="" loading="lazy" decoding="async"></span><span class="t">${p.t}</span><span class="c">${p.artist}</span><span class="y">${p.year}</span></button>`;
     li.firstChild.onclick=e=>{NAV=ids.slice();openProject(i,e.currentTarget)};
     list.appendChild(li);
   });

@@ -164,8 +164,8 @@ html,body{height:100%}
 body{overflow:hidden}
 #core .word:hover,#core .word:focus-visible{scale:1.02;filter:drop-shadow(0 0 22px rgba(0,0,255,.75)) drop-shadow(0 0 4px rgba(160,160,255,.4))}
 #core .word:focus-visible{outline:none}
-#core .word,#core .word:hover,#core .word:focus-visible{filter:none}
-html.store #core .word,html.store #core .word:hover,html.store #core .word:focus-visible{filter:invert(1)}
+#core .word,#core .word:hover,#core .word:focus-visible{filter:none!important}
+html.store #core .word,html.store #core .word:hover,html.store #core .word:focus-visible{filter:invert(1)!important}
 #core .wshadow{position:absolute;left:50%;top:50%;translate:-50% -50%;pointer-events:none;max-width:none;transition:opacity .7s ease}
 #core .wshadow.hov{opacity:0;transition:none}
 html.store #core .wshadow{opacity:0!important}
@@ -1083,9 +1083,9 @@ function sizeLogo(){
   /* the logo's blue glow, blurred once (was two drop-shadow filters recomputed every frame); [rest, hover] */
   if(shadowCvs.length===2){const pad=Math.round(logoW*.16),SH=[[[18,"rgba(0,0,255,.4)"],[3,"rgba(120,120,255,.2)"]],[[22,"rgba(0,0,255,.75)"],[4,"rgba(160,160,255,.4)"]]];
     shadowCvs.forEach((c,i)=>{c.width=logoW+pad*2;c.height=logoCv.height+pad*2;c.style.width=(c.width/dpr)+"px";c.style.height=(c.height/dpr)+"px";
-      const x=c.getContext("2d"),a=i?1:.42; /* the resting logo is grainy and only partly opaque, so its glow is weaker */
+      const x=c.getContext("2d"),a=i?.7:.6,reps=i?2:1; /* matched by eye to the old chained drop-shadows */
       for(const [r,col] of SH[i]){const t=document.createElement("canvas");t.width=c.width;t.height=c.height;const tx=t.getContext("2d");tx.drawImage(logoSolid,pad,pad);tx.globalCompositeOperation="source-in";tx.fillStyle=col;tx.fillRect(0,0,t.width,t.height);
-        x.save();x.globalAlpha=a;x.filter=`blur(${(r/2*dpr).toFixed(1)}px)`;x.drawImage(t,0,0);x.restore()}})}
+        for(let q=0;q<reps;q++){x.save();x.globalAlpha=a;x.filter=`blur(${(r/2*dpr).toFixed(1)}px)`;x.drawImage(t,0,0);x.restore()}}})}
   /* halo canvas: logo-sized plus padding for the dissolve glow */
   if(haloCv){haloCache=[];haloLast=-1;haloP=Math.round(logoW*.3);haloCv.width=logoW+haloP*2;haloCv.height=logoCv.height+haloP*2;
     haloCv.style.width=(haloCv.width/dpr)+"px";haloCv.style.height=(haloCv.height/dpr)+"px";haloTmp.width=haloCv.width;haloTmp.height=haloCv.height}

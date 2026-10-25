@@ -577,8 +577,8 @@ const VLOOP={"grandenoamor":"media/grandenoamor-loop.mp4","vicios":"media/vicios
 /* full-resolution stills for the ring (live site: files in media/thumbs; preview: embedded) and every frame's own aspect ratio */
 const HI={"PJ9wyxCeK1o":"media/thumbs/PJ9wyxCeK1o.webp","ltvpS2cf9h8":"media/thumbs/ltvpS2cf9h8.webp","vgCRpYvdAi8":"media/thumbs/vgCRpYvdAi8.webp","2ojGZKJhEvU":"media/thumbs/2ojGZKJhEvU.webp","pRyx3Q-TEE8":"media/thumbs/pRyx3Q-TEE8.webp","U7edHPK4bb4":"media/thumbs/U7edHPK4bb4.webp","B7VOs2LPC-Q":"media/thumbs/B7VOs2LPC-Q.webp","qZT29M_AI18":"media/thumbs/qZT29M_AI18.webp"};
 const LOOP_AR={"nightime":1.7824,"insular":1.3389,"quemestu":1.3389,"pega":2.0084,"fibratv":1.3333,"vicios":1.3389,"grandenoamor":1.4097,"ss":1.3333,"10minutos":1.225,"pressinhas":1.3333,"telefone":1.225,"malvado":1.3333,"atitude":1.0,"assuntomeu":1.6667,"ultimadanca":1.3333,"stupidrich":1.3333,"bravos":1.3333,"tragico":1.3333},THUMB_AR={"PJ9wyxCeK1o":1.7778,"ltvpS2cf9h8":1.7778,"vgCRpYvdAi8":1.7778,"2ojGZKJhEvU":1.7778,"pRyx3Q-TEE8":1.3418,"U7edHPK4bb4":1.7778,"B7VOs2LPC-Q":1.7778,"qZT29M_AI18":1.7778};
-/* releases list: small square thumbnails, low-res stills only (no animation, no full-res files) */
-const listPic=p=>THUMBS[p.yt]||pic(p);
+/* releases list: small square thumbnails from the low-res versions (moving ones stay moving) */
+const listPic=pic;
 const hiPic=p=>p.m?LOOPS[p.m]:(HI[p.yt]||THUMBS[p.yt]);
 const arOf=p=>p.m?(LOOP_AR[p.m]||4/3):(THUMB_AR[p.yt]||16/9);
 

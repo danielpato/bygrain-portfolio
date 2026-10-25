@@ -970,21 +970,26 @@ addEventListener("keydown",e=>{if(e.key==="Escape"&&proj.hidden&&!site.hidden)se
 
 /* ---------- centre logo: flowing opacity waves (50%–80%) ---------- */
 let logoCv=null,logoW=0,logoSolid=null,haloCv=null,haloP=0,haloAt=0,haloR=0,prox=0,proxT=0;const haloTmp=document.createElement("canvas");
-/* "dissolve" outer glow: blur the logo's silhouette, then keep each pixel only if a random draw falls under its glow strength */
+/* "dissolve" outer glow: blur the logo's silhouette, then keep each pixel only if a random draw falls under its glow strength.
+   Pre-made: 8 strength levels x 3 random variants, each computed once on first use, then just flipped through (no live pixel work) */
+const HALO_L=8,HALO_V=3;let haloCache=[],haloLast=-1;
+function haloFrame(lv,va){
+  const key=lv*HALO_V+va;if(haloCache[key])return haloCache[key];
+  const p=lv/(HALO_L-1),W=haloCv.width,H=haloCv.height,t=haloTmp.getContext("2d",{willReadFrequently:true});
+  const r=haloP*(.12+.7*p);t.clearRect(0,0,W,H);t.filter=`blur(${Math.max(.5,r*.32).toFixed(1)}px)`;
+  for(let k=0;k<2;k++)t.drawImage(logoSolid,haloP,haloP,logoCv.width,logoCv.height);
+  t.filter="none";
+  const im=t.getImageData(0,0,W,H),d=im.data,gain=.55+.45*p,edge=haloP*.45;
+  for(let i=0;i<d.length;i+=4){const px=(i>>2)%W,py=(i>>2)/W|0,e=Math.min(1,Math.min(px,py,W-1-px,H-1-py)/edge); /* fade out before the canvas edge */
+    const a=d[i+3]/255*gain*e*e;if(a>0&&Math.random()<a){d[i]=150;d[i+1]=165;d[i+2]=255;d[i+3]=Math.round(140+115*a)}else d[i+3]=0}
+  const c=document.createElement("canvas");c.width=W;c.height=H;c.getContext("2d").putImageData(im,0,0);return haloCache[key]=c;
+}
 function drawHalo(now){
   if(!haloCv||!logoSolid||!haloCv.width)return;
   prox+=(Math.max(proxT,logoHov)-prox)*.12;
-  const target=haloP*(.12+.7*prox);haloR+=(target-haloR)*.2;
   if(now-haloAt<70&&!reduce)return;haloAt=now;
-  const W=haloCv.width,H=haloCv.height,t=haloTmp.getContext("2d",{willReadFrequently:true});
-  t.clearRect(0,0,W,H);t.filter=`blur(${Math.max(.5,haloR*.32).toFixed(1)}px)`;
-  for(let k=0;k<2;k++)t.drawImage(logoSolid,haloP,haloP,logoCv.width,logoCv.height);
-  t.filter="none";
-  const im=t.getImageData(0,0,W,H),d=im.data,gain=.55+.45*prox;
-  const edge=haloP*.45;
-  for(let i=0;i<d.length;i+=4){const px=(i>>2)%W,py=(i>>2)/W|0,e=Math.min(1,Math.min(px,py,W-1-px,H-1-py)/edge); /* fade out before the canvas edge */
-    const a=d[i+3]/255*gain*e*e;if(a>0&&Math.random()<a){d[i]=150;d[i+1]=165;d[i+2]=255;d[i+3]=Math.round(140+115*a)}else d[i+3]=0}
-  const h=haloCv.getContext("2d");h.clearRect(0,0,W,H);h.putImageData(im,0,0);
+  const lv=Math.round(prox*(HALO_L-1));let va=(Math.random()*HALO_V)|0;if(lv*HALO_V+va===haloLast)va=(va+1)%HALO_V;haloLast=lv*HALO_V+va;
+  const h=haloCv.getContext("2d");h.clearRect(0,0,haloCv.width,haloCv.height);h.drawImage(haloFrame(lv,va),0,0);
 }const logoImg=new Image();logoImg.src=LOGO;
 const FW=64,FH=20,field=document.createElement("canvas");field.width=FW;field.height=FH;
 const fctx=field.getContext("2d"),fdata=fctx.createImageData(FW,FH);
@@ -1000,7 +1005,7 @@ function sizeLogo(){
   for(let k=0;k<dd.length;k+=4){dd[k]=dd[k+1]=dd[k+2]=255;dd[k+3]=Math.min(255,dd[k+3]*4)}
   sx.putImageData(im,0,0);
   /* halo canvas: logo-sized plus padding for the dissolve glow */
-  if(haloCv){haloP=Math.round(logoW*.3);haloCv.width=logoW+haloP*2;haloCv.height=logoCv.height+haloP*2;
+  if(haloCv){haloCache=[];haloLast=-1;haloP=Math.round(logoW*.3);haloCv.width=logoW+haloP*2;haloCv.height=logoCv.height+haloP*2;
     haloCv.style.width=(haloCv.width/dpr)+"px";haloCv.style.height=(haloCv.height/dpr)+"px";haloTmp.width=haloCv.width;haloTmp.height=haloCv.height}
   return true;
 }

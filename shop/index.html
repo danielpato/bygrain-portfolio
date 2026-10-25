@@ -715,7 +715,7 @@ function build(){
       if(store){const m=MERCH[LIST[k]];b.classList.add("merch");if(m.k.startsWith("tee"))b.classList.add("pix");b.dataset.m=LIST[k];b.setAttribute("aria-label",`${m.label}, ${m.sub}`);
         b.innerHTML=`<img alt="" draggable="false" src="${m.src}"><div class="shade"></div>`;}
       else{const pi=LIST[k],p=PROJECTS[pi];b.dataset.p=pi;b.setAttribute("aria-label",`${p.t} by ${p.artist}, ${p.year}`);
-        b.innerHTML=(EMBED_YT&&VLOOP[p.m]&&!reduce&&!QS.has("still"))?`<img class="vstill" alt="" draggable="false" src="/media/stills/${p.m}.webp"><video src="${VLOOP[p.m]}" poster="${pic(p)}" muted autoplay loop playsinline disablepictureinpicture preload="auto"></video><div class="shade"></div>`:`<img alt="" draggable="false" src="${hiPic(p)}"><div class="shade"></div>`;}
+        b.innerHTML=(EMBED_YT&&VLOOP[p.m]&&!reduce&&!QS.has("still"))?`<img class="vstill" alt="" draggable="false" src="/media/stills/${p.m}.webp"><video src="${VLOOP[p.m]}" poster="${pic(p)}" muted loop playsinline disablepictureinpicture preload="auto"></video><div class="shade"></div>`:`<img alt="" draggable="false" src="${hiPic(p)}"><div class="shade"></div>`;}
       const vid=b.querySelector("video");if(vid)vid.onerror=()=>{const im=new Image();im.alt="";im.draggable=false;im.src=vid.poster;vid.replaceWith(im);const c=cards.find(c=>c.el===b);if(c){c.img=im;c.vid=null}};
       ring.appendChild(b);
       cards.push({vid:b.querySelector("video"),el:b,theta:q.x/R,y:q.y,dz:q.dz,k:k/placed.length,shade:b.lastChild,img:b.firstChild,merch:store});

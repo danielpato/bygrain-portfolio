@@ -803,20 +803,23 @@ function build(){
   const weights=Array.from({length:cols},()=>store?1:.7+r()*.8),sum=weights.reduce((a,b)=>a+b,0);
   let acc=0;
   if(!store){
-    /* organic scatter: every frame the same height at its own ratio, placed one by one at a jittered spot around the
-       ring and a random height, never overlapping another frame; no columns, so frames drift, stagger and sometimes stack */
+    /* two loose rows: frames alternate between an upper and a lower row (with the odd random swap), each placed at a
+       jittered spot around the ring with a small height wobble, never overlapping; same height, each at its own ratio */
     const ars=LIST.map(pi=>arOf(PROJECTS[pi])),C=2*Math.PI*R,sumAR=ars.reduce((a,b)=>a+b,0);
-    const FH=Math.min(H*(narrow?.4:.44),C*.76/sumAR),band=FH*1.7,G=gap*1.1; /* one gently staggered row: heights vary a little, everything stays on screen at full zoom */
+    const FH=Math.min(H*.31,C*(narrow?1.12:1.32)/sumAR),G=gap*1.2,ROW=FH*.55+G/2,WOB=FH*.12,LIFT=-FH*.21;
+    const rows=LIST.map((_,k)=>(k%2)^(r()<.25?1:0));
     let fails=0;const angDist=(a,b)=>{let d=Math.abs(a-b)%C;return Math.min(d,C-d)};
     for(let k=0;k<N;k++){
-      const w=FH*ars[k],slot=(k+.5)/N*C;let best=null;
-      for(let t=0;t<400;t++){
-        const jit=Math.min(1,.45+t/160);                      // widen the search if it is crowded
-        const x=((slot+(r()-.5)*C/N*1.6*jit)%C+C)%C,y=(r()-.5)*(band-FH)*(t<300?1:1.15);
-        const ok=placed.every(q=>angDist(x,q.x)>=(w+q.w)/2+G||Math.abs(y-q.yc)>=FH+G);
-        if(ok){best={x,y};break}
+      const w=FH*ars[k],slot=(k+.5)/N*C,ry=LIFT+(rows[k]?ROW:-ROW);let best=null;
+      for(let t=0;t<500;t++){
+        const jit=Math.min(1.6,.6+t/150);
+        const x=((slot+(r()-.5)*C/N*1.8*jit)%C+C)%C,y=ry+(r()-.5)*2*WOB;
+        if(placed.every(q=>angDist(x,q.x)>=(w+q.w)/2+G||Math.abs(y-q.yc)>=FH+G)){best={x,y};break}
       }
-      if(!best){fails++;best={x:slot,y:0}}
+      if(!best){ /* crowded: sweep the whole ring, both rows, for the first free spot */
+        const fits=(x,y)=>placed.every(q=>angDist(x,q.x)>=(w+q.w)/2+G||Math.abs(y-q.yc)>=FH+G);
+        outer:for(let dx=0;dx<C;dx+=C/360)for(const sx of [1,-1])for(const yy of [ry,LIFT+(rows[k]?-ROW:ROW)]){const x=((slot+sx*dx)%C+C)%C;if(fits(x,yy)){best={x,y:yy};break outer}}
+        if(!best){fails++;best={x:slot,y:ry}}}
       placed.push({x:best.x,y:best.y-FH/2,yc:best.y,w,h:FH,dz:(r()-.4)*R*.05});
     }
   }

@@ -93,6 +93,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 a{color:inherit}
 button{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--signal);outline-offset:3px}
+/* the ring itself takes keyboard focus (arrow keys spin it); its outline would draw a line around the whole screen */
+#stage:focus,#stage:focus-visible,#shows:focus,#site:focus{outline:none}
 .wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1440px;margin:0 auto}
 .label{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
 

@@ -677,6 +677,21 @@ document.querySelectorAll("#lang button").forEach(b=>b.addEventListener("click",
 /* ---------- ring ---------- */
 const pts=new Map();let pinch0=0,zoom0=1;
 const RING=PROJECTS.map((p,i)=>p.main?i:-1).filter(i=>i>=0);
+/* spread each artist's releases evenly around the ring: frames sharing a column or in neighbouring columns count as
+   close (the ring is a circle, so the last and first columns are neighbours). A short deterministic search swaps
+   frames while it pushes same-artist frames further apart; the result is cached per column layout. */
+const ARTIST_OF=i=>{const a=PROJECTS[i].artist;return /Chico da Tina/.test(a)?"Chico da Tina":/Van Zee/.test(a)?"Van Zee":a.split(/\s+(?:&|x|with)\s+/)[0]};
+const SPREAD_CACHE={};
+function spreadArtists(list,counts){const key=counts.join(",");if(SPREAD_CACHE[key])return SPREAD_CACHE[key];
+  const col=[];counts.forEach((n,c)=>{for(let j=0;j<n;j++)col.push(c)});const C=counts.length,N=list.length;
+  const cost=o=>{let t=0;for(let a=0;a<N;a++)for(let b=a+1;b<N;b++)if(ARTIST_OF(o[a])===ARTIST_OF(o[b])){const d=Math.abs(col[a]-col[b]),cd=Math.min(d,C-d);t+=1/((cd+.35)*(cd+.35))}
+    /* and never three neighbouring columns in a row for one artist */
+    const by={};o.forEach((p,k)=>{(by[ARTIST_OF(p)]=by[ARTIST_OF(p)]||new Set()).add(col[k])});
+    for(const g in by){const cs=by[g];if(cs.size<3)continue;for(let c=0;c<C;c++)if(cs.has(c)&&cs.has((c+1)%C)&&cs.has((c+2)%C))t+=3}
+    return t};
+  let o=list.slice(),best=cost(o),seed=11;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  for(let it=0;it<6000;it++){const a=(rnd()*N)|0,b=(rnd()*N)|0;if(a===b)continue;[o[a],o[b]]=[o[b],o[a]];const c=cost(o);if(c<=best)best=c;else[o[a],o[b]]=[o[b],o[a]]}
+  return SPREAD_CACHE[key]=o}
 const stage=document.getElementById("stage"),ring=document.getElementById("ring"),tip=document.getElementById("tip");
 const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 let cards=[],angle=0,vel=0,R=500,paused=reduce,auto=-0.0016;
@@ -694,10 +709,11 @@ function build(){
   stage.style.perspective=Math.round(R*2.7)+"px";
   /* columns like a contact sheet, but each column is staggered: its own height, start offset, gaps, widths and nudge */
   /* each main release appears exactly once: spread them over staggered columns of 1–2 frames */
-  const LIST=store?MERCH.map((_,i)=>i):RING;
+  let LIST=store?MERCH.map((_,i)=>i):RING;
   const N=LIST.length,r=rng(42);let cols=Math.max(4,Math.round(N/1.6));const gap=narrow?6:10,placed=[];
   if(store){cols=N}
   const counts=Array(cols).fill(1);let extra=N-cols;while(extra>0){const i=(r()*cols)|0;if(counts[i]<2){counts[i]++;extra--}}
+  if(!store)LIST=spreadArtists(LIST,counts);
   const weights=Array.from({length:cols},()=>store?1:.7+r()*.8),sum=weights.reduce((a,b)=>a+b,0);
   let acc=0;
   if(!store){

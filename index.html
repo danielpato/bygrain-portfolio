@@ -805,7 +805,8 @@ function build(){
   if(!store){
     /* every frame the same height, each at its own ratio: columns get room in proportion to their widest frame */
     const colAR=[];let k0=0;for(let i=0;i<cols;i++){let m=0;for(let j=0;j<counts[i];j++)m=Math.max(m,arOf(PROJECTS[LIST[k0+j]]));colAR.push(m);k0+=counts[i]}
-    const wts=colAR.map(a=>a*(.9+r()*.35)),ws=wts.reduce((a,b)=>a+b,0);
+    /* columns holding two frames get extra room so the pair can be staggered sideways instead of stacked dead centre */
+    const wts=colAR.map((a,i)=>a*(.9+r()*.35)*(counts[i]>1?1.32:1)),ws=wts.reduce((a,b)=>a+b,0);
     const arcs=wts.map(w=>w/ws*Math.PI*2),colWs=arcs.map(a=>2*R*Math.sin(a/2)-gap);
     const FH=Math.min(H*(narrow?.4:.42),...colWs.map((w,i)=>w*.88/colAR[i]));
     for(let i=0;i<cols;i++){
@@ -813,9 +814,11 @@ function build(){
       const gaps=Array.from({length:n-1},()=>gap*(1.5+r()*4));
       const span=n*FH+gaps.reduce((a,b)=>a+b,0);
       let y=-span/2+(r()-.5)*H*(n===1?.5:.3);         // column slides up or down
+      const side=i%2?1:-1;   /* no extra random draws, so heights and the rest of the layout stay exactly as before */
       for(let j=0;j<n;j++){
         const w=FH*arOf(PROJECTS[LIST[placed.length]]);
-        const x=mid*R+(colW-w)*(r()-.5);                 // nudge within the column
+        const x=n>1?mid*R+(j?-side:side)*(colW-w)/2*.85   // a stacked pair leans to opposite sides
+                   :mid*R+(colW-w)*(r()-.5);              // a single frame just nudges within its column
         placed.push({x,y,w,h:FH,dz:(r()-.4)*R*.08});
         y+=FH+(gaps[j]||0);
       }

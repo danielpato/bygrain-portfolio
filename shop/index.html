@@ -179,7 +179,7 @@ html.store body{background:#f4f3ef}
 #core .word{transition:scale .3s ease,filter .7s ease}
 html.store #core .word,html.store #core .word:hover,html.store #core .word:focus-visible{filter:invert(1)}
 .gscope .halo,#flatGlow{transition:opacity .7s ease}
-html.store .gscope .halo,html.store #flatGlow{opacity:0}
+html.store #flatGlow{opacity:0} /* the speckled halo stays in the store, drawn black */
 .dock-item.on::after{content:"";position:absolute;left:50%;bottom:-7px;translate:-50% 0;width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.85)}
 
 .gscope .gwrap{position:absolute;left:0;top:0;width:0;height:0;scale:var(--z,1)}
@@ -1135,21 +1135,21 @@ const LOGO_CACHE={};let shadowCvs=[],logoCv=null,logoW=0,logoSolid=null,haloCv=n
    Pre-made: 8 strength levels x 3 random variants, each computed once on first use, then just flipped through (no live pixel work) */
 const HALO_L=8,HALO_V=3;let haloCache=[],haloLast=-1;
 function haloFrame(lv,va){
-  const key=lv*HALO_V+va;if(haloCache[key])return haloCache[key];
+  const dark=store,key=(dark?100:0)+lv*HALO_V+va;if(haloCache[key])return haloCache[key];
   const p=lv/(HALO_L-1),W=haloCv.width,H=haloCv.height,t=haloTmp.getContext("2d",{willReadFrequently:true});
   const r=haloP*(.12+.7*p);t.clearRect(0,0,W,H);t.filter=`blur(${Math.max(.5,r*.32).toFixed(1)}px)`;
   for(let k=0;k<2;k++)t.drawImage(logoSolid,haloP,haloP,logoCv.width,logoCv.height);
   t.filter="none";
   const im=t.getImageData(0,0,W,H),d=im.data,gain=.55+.45*p,edge=haloP*.45;
   for(let i=0;i<d.length;i+=4){const px=(i>>2)%W,py=(i>>2)/W|0,e=Math.min(1,Math.min(px,py,W-1-px,H-1-py)/edge); /* fade out before the canvas edge */
-    const a=d[i+3]/255*gain*e*e;if(a>0&&Math.random()<a){d[i]=150;d[i+1]=165;d[i+2]=255;d[i+3]=Math.round(140+115*a)}else d[i+3]=0}
+    const a=d[i+3]/255*gain*e*e;if(a>0&&Math.random()<a){if(dark){d[i]=d[i+1]=d[i+2]=0}else{d[i]=150;d[i+1]=165;d[i+2]=255}d[i+3]=Math.round(140+115*a)}else d[i+3]=0}
   const c=document.createElement("canvas");c.width=W;c.height=H;c.getContext("2d").putImageData(im,0,0);return haloCache[key]=c;
 }
 function drawHalo(now){
   if(!haloCv||!logoSolid||!haloCv.width)return;
   prox+=(Math.max(proxT,logoHov)-prox)*.12;
   if(now-haloAt<70&&!reduce)return;haloAt=now;
-  const lv=Math.round(prox*(HALO_L-1));let va=(Math.random()*HALO_V)|0;if(lv*HALO_V+va===haloLast)va=(va+1)%HALO_V;haloLast=lv*HALO_V+va;
+  const lv=Math.round(prox*(HALO_L-1));let va=(Math.random()*HALO_V)|0;if(lv*HALO_V+va===haloLast)va=(va+1)%HALO_V;haloLast=lv*HALO_V+va;haloAt=haloAt;
   const h=haloCv.getContext("2d");h.clearRect(0,0,haloCv.width,haloCv.height);h.drawImage(haloFrame(lv,va),0,0);
 }const logoImg=new Image();logoImg.src=LOGO;
 const FW=64,FH=20,field=document.createElement("canvas");field.width=FW;field.height=FH;

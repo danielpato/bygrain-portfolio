@@ -1149,7 +1149,10 @@ function haloFrame(lv,va){
 function drawHalo(now){
   if(!haloCv||!logoSolid||!haloCv.width)return;
   prox+=(Math.max(proxT,logoHov)-prox)*.12;
-  if(now-haloAt<70&&!reduce)return;haloAt=now;
+  /* in the store the speckles are black on a light page, where a far-away, faint halo swapping patterns reads as flicker:
+     there it fades right down and changes pattern less often until the cursor comes close */
+  if(store){haloCv.style.opacity=Math.min(1,.18+prox*1.6).toFixed(2)}else if(haloCv.style.opacity)haloCv.style.opacity="";
+  if(now-haloAt<(store?70+180*(1-prox):70)&&!reduce)return;haloAt=now;
   const lv=Math.round(prox*(HALO_L-1));let va=(Math.random()*HALO_V)|0;if(lv*HALO_V+va===haloLast)va=(va+1)%HALO_V;haloLast=lv*HALO_V+va;haloAt=haloAt;
   const h=haloCv.getContext("2d");h.clearRect(0,0,haloCv.width,haloCv.height);h.drawImage(haloFrame(lv,va),0,0);
 }const logoImg=new Image();logoImg.src=LOGO;

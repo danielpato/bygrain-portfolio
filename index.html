@@ -784,6 +784,7 @@ const MEDIA_CACHE={};
 function build(){
   ring.innerHTML="";cards=[];
   const vw=stage.clientWidth,vh=window.innerHeight;
+  if(vw<10||vh<10){setTimeout(build,250);return} /* window not laid out yet (e.g. opened in a hidden tab): try again shortly */
   const narrow=vw<600;TILT=narrow?-24:-15;ZOOM_TILT=narrow?22:13; /* phones start steeper, so zooming lifts them further */
   R=narrow?Math.min(vw*.66,vh*.42):Math.max(180,Math.min(vw*.378,vh*.765,545)) /* capped at the size an M1 MacBook (1440×900) shows */;
   coreZ=0;tilt=TILT;

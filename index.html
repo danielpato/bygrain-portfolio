@@ -799,26 +799,25 @@ function build(){
   const N=LIST.length,r=rng(42);let cols=Math.max(4,Math.round(N/1.6));const gap=narrow?6:10,placed=[];
   if(store){cols=N}
   const counts=Array(cols).fill(1);let extra=N-cols;while(extra>0){const i=(r()*cols)|0;if(counts[i]<2){counts[i]++;extra--}}
-  if(!store)LIST=spreadArtists(LIST,counts);
+  if(!store)LIST=spreadArtists(LIST,Array(N).fill(1)); /* artists spread around the ring, one slot each */
   const weights=Array.from({length:cols},()=>store?1:.7+r()*.8),sum=weights.reduce((a,b)=>a+b,0);
   let acc=0;
   if(!store){
-    /* every frame the same height, each at its own ratio: columns get room in proportion to their widest frame */
-    const colAR=[];let k0=0;for(let i=0;i<cols;i++){let m=0;for(let j=0;j<counts[i];j++)m=Math.max(m,arOf(PROJECTS[LIST[k0+j]]));colAR.push(m);k0+=counts[i]}
-    const wts=colAR.map(a=>a*(.9+r()*.35)),ws=wts.reduce((a,b)=>a+b,0);
-    const arcs=wts.map(w=>w/ws*Math.PI*2),colWs=arcs.map(a=>2*R*Math.sin(a/2)-gap);
-    const FH=Math.min(H*(narrow?.4:.42),...colWs.map((w,i)=>w*.88/colAR[i]));
-    for(let i=0;i<cols;i++){
-      const mid=acc+arcs[i]/2;acc+=arcs[i];const colW=colWs[i],n=counts[i];
-      const gaps=Array.from({length:n-1},()=>gap*(1.5+r()*4));
-      const span=n*FH+gaps.reduce((a,b)=>a+b,0);
-      let y=-span/2+(r()-.5)*H*(n===1?.5:.3);         // column slides up or down
-      for(let j=0;j<n;j++){
-        const w=FH*arOf(PROJECTS[LIST[placed.length]]);
-        const x=mid*R+(colW-w)*(r()-.5);                 // nudge within the column
-        placed.push({x,y,w,h:FH,dz:(r()-.4)*R*.08});
-        y+=FH+(gaps[j]||0);
+    /* organic scatter: every frame the same height at its own ratio, placed one by one at a jittered spot around the
+       ring and a random height, never overlapping another frame; no columns, so frames drift, stagger and sometimes stack */
+    const ars=LIST.map(pi=>arOf(PROJECTS[pi])),C=2*Math.PI*R,sumAR=ars.reduce((a,b)=>a+b,0);
+    const FH=Math.min(H*(narrow?.4:.44),C*1.02/sumAR),band=H*1.3,G=gap*1.4;
+    let fails=0;const angDist=(a,b)=>{let d=Math.abs(a-b)%C;return Math.min(d,C-d)};
+    for(let k=0;k<N;k++){
+      const w=FH*ars[k],slot=(k+.5)/N*C;let best=null;
+      for(let t=0;t<400;t++){
+        const jit=Math.min(1,.45+t/160);                      // widen the search if it is crowded
+        const x=((slot+(r()-.5)*C/N*1.6*jit)%C+C)%C,y=(r()-.5)*(band-FH)*(t<300?1:1.15);
+        const ok=placed.every(q=>angDist(x,q.x)>=(w+q.w)/2+G||Math.abs(y-q.yc)>=FH+G);
+        if(ok){best={x,y};break}
       }
+      if(!best){fails++;best={x:slot,y:(k%2?1:-1)*(FH*.6)}}
+      placed.push({x:best.x,y:best.y-FH/2,yc:best.y,w,h:FH,dz:(r()-.4)*R*.05});
     }
   }
   else for(let i=0;i<cols;i++){

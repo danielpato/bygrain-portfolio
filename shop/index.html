@@ -195,7 +195,8 @@ html.store #flatGlow{opacity:0} /* the speckled halo stays in the store, drawn b
 #site{position:fixed;inset:0;z-index:36;overflow-y:auto;overscroll-behavior:contain;background:color-mix(in srgb,var(--ink) 90%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);padding-top:env(safe-area-inset-top,0px);opacity:0;transition:opacity .4s}
 #site.open{opacity:1}
 /* the menu bar (with Close) stays pinned to the top while the menu scrolls, so there is always a way out */
-.site-nav{display:flex;justify-content:flex-end;align-items:center;gap:20px;padding-block:14px;position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--ink) 82%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.site-nav{display:flex;justify-content:flex-end;align-items:center;gap:20px;padding-block:14px;position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--ink) 90%,var(--pagebg,var(--ink)))} /* solid, and the same mix as the menu panel (90% menu tint over the page colour), so it matches in both modes */
+html.store{--pagebg:#f4f3ef}
 .site-close{padding:6px 12px!important;margin-left:8px!important;border:1px solid var(--line)!important;border-radius:999px!important;color:var(--paper)!important}
 .site-nav a{text-decoration:none;font-size:14px;color:var(--mute)}
 .site-nav a:hover,.site-close:hover{color:var(--paper)}

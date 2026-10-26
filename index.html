@@ -681,6 +681,7 @@ let cards=[],angle=0,vel=0,R=500,paused=reduce,auto=-0.0016;
 /* test switches for chasing stutter: ?still (no video loops), ?flat (no 2x frames), ?noglow (glow grain frozen) */
 const QS=new URLSearchParams(location.search),CS=QS.has("flat")?1:2;
 if(QS.has("noglow"))document.documentElement.classList.add("noglow");
+const MEDIA_CACHE={};
 function build(){
   ring.innerHTML="";cards=[];
   const vw=stage.clientWidth,vh=window.innerHeight;
@@ -742,10 +743,11 @@ function build(){
       /* laid out at 2x and scaled back down in render(), so the browser rasterises frames (and the dimming over videos) at full sharpness */
       b.style.width=q.w*CS+"px";b.style.height=q.h*CS+"px";b.style.marginLeft=(-q.w*CS/2)+"px";b.style.marginTop=(q.h/2-q.h*CS/2)+"px";
       if(store){const m=MERCH[LIST[k]];b.classList.add("merch");if(m.k.startsWith("tee"))b.classList.add("pix");b.dataset.m=LIST[k];b.setAttribute("aria-label",`${m.label}, ${m.sub}`);
-        b.innerHTML=`<img alt="" draggable="false" src="${m.src}"><div class="shade"></div>`;}
+        if(MEDIA_CACHE["m"+LIST[k]])b.append(...MEDIA_CACHE["m"+LIST[k]]);else{b.innerHTML=`<img alt="" draggable="false" src="${m.src}"><div class="shade"></div>`;MEDIA_CACHE["m"+LIST[k]]=[...b.childNodes]}}
       else{const pi=LIST[k],p=PROJECTS[pi];b.dataset.p=pi;b.setAttribute("aria-label",`${p.t} by ${p.artist}, ${p.year}`);
-        b.innerHTML=(EMBED_YT&&VLOOP[p.m]&&!reduce&&!QS.has("still"))?`<img class="vstill" alt="" draggable="false" src="media/stills/${p.m}.webp"><video src="${VLOOP[p.m]}" poster="${pic(p)}" muted loop playsinline disablepictureinpicture preload="auto"></video><div class="shade"></div>`:`<img alt="" draggable="false" src="${hiPic(p)}"><div class="shade"></div>`;}
-      const vid=b.querySelector("video");if(vid)vid.onerror=()=>{const im=new Image();im.alt="";im.draggable=false;im.src=vid.poster;vid.replaceWith(im);const c=cards.find(c=>c.el===b);if(c){c.img=im;c.vid=null;c.media=[...b.querySelectorAll("img")];c.o=null}};
+        /* thumbnails are built once and reused when the ring is rebuilt (store switch, resize): no re-decoding, videos keep playing state */
+        if(MEDIA_CACHE[pi]){b.append(...MEDIA_CACHE[pi]);b.querySelectorAll("video").forEach(v=>v.pause())}else{b.innerHTML=(EMBED_YT&&VLOOP[p.m]&&!reduce&&!QS.has("still"))?`<img class="vstill" alt="" draggable="false" src="media/stills/${p.m}.webp"><video src="${VLOOP[p.m]}" poster="${pic(p)}" muted loop playsinline disablepictureinpicture preload="auto"></video><div class="shade"></div>`:`<img alt="" draggable="false" src="${hiPic(p)}"><div class="shade"></div>`;MEDIA_CACHE[pi]=[...b.childNodes]}}
+      const vid=b.querySelector("video");if(vid&&!vid.dataset.wired){vid.dataset.wired=1;vid.onerror=()=>{const bb=vid.parentElement,im=new Image();im.alt="";im.draggable=false;im.src=vid.poster;vid.replaceWith(im);const c=bb&&cards.find(c=>c.el===bb);if(c){c.img=im;c.vid=null;c.media=[...bb.querySelectorAll("img")];c.o=null}const pc=bb&&MEDIA_CACHE[bb.dataset.p];if(pc){const ix=pc.indexOf(vid);if(ix>=0)pc[ix]=im}}}
       ring.appendChild(b);
       cards.push({media:[...b.querySelectorAll("img,video")],vid:b.querySelector("video"),el:b,theta:q.x/R,y:q.y,dz:q.dz,k:k/placed.length,shade:b.lastChild,img:b.firstChild,merch:store});
   });
@@ -773,7 +775,7 @@ let glowKey="";
 const GLOW_POS=[[0,0],[-47,23],[61,-38],[-19,-71],[88,54],[-73,9],[31,82],[-102,-26]];
 const urlOf=v=>{const m=/url\("?(.*?)"?\)$/.exec(v.trim().replace(/\\"/g,'"'));return m?m[1].replace(/\\"/g,'"'):""};
 function loadImg(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src})}
-let glowTimers=[],glowSets=null;
+let glowTimers=[],glowSets=null;const GLOW_CACHE={};
 async function bakeGlow(fg){
   glowTimers.forEach(clearInterval);glowTimers=[];glowSets=null;
   if(reduce||QS.has("noglow"))return;
@@ -788,11 +790,16 @@ async function bakeGlow(fg){
     return idx.map(i=>{const c=document.createElement("canvas");c.width=cw;c.height=ch;const x=c.getContext("2d");ell(x,stops);
       x.globalCompositeOperation="destination-in";const p=x.createPattern(tileC,"repeat"),[ox,oy]=GLOW_POS[i];
       p.setTransform(new DOMMatrix([1,0,0,1,ox*k,oy*k]));x.fillStyle=p;x.fillRect(0,0,cw,ch);return c})};
-  const sets={lo:{main:await make("--noise",320,MAIN,[0,2,4,6]),spk:await make("--specks",260,SPK,[7,5,3,1])},hi:null,make,MAIN,SPK};
-  if(!sets.lo.main||!sets.lo.spk||fg!==flatGlow)return;
-  /* soft layer: the same gradient blurred once instead of a live 30px blur */
-  const pad=Math.round(60*k),soft=document.createElement("canvas");soft.width=cw+pad*2;soft.height=ch+pad*2;
-  {const x=soft.getContext("2d"),t=document.createElement("canvas");t.width=cw;t.height=ch;ell(t.getContext("2d"),MAIN);x.filter=`blur(${30*k}px)`;x.drawImage(t,pad,pad)}
+  /* frames are cached per size: switching to the store and back reuses them instead of rebuilding */
+  const key=cw+"x"+ch;let sets=GLOW_CACHE[key];
+  if(!sets){sets={lo:{main:await make("--noise",320,MAIN,[0,2,4,6]),spk:await make("--specks",260,SPK,[7,5,3,1])},hi:null,make,MAIN,SPK};
+    if(!sets.lo.main||!sets.lo.spk)return;
+    /* soft layer: the same gradient blurred once instead of a live 30px blur */
+    const pad=Math.round(60*k),sc=document.createElement("canvas");sc.width=cw+pad*2;sc.height=ch+pad*2;
+    {const x=sc.getContext("2d"),t=document.createElement("canvas");t.width=cw;t.height=ch;ell(t.getContext("2d"),MAIN);x.filter=`blur(${30*k}px)`;x.drawImage(t,pad,pad)}
+    sets.soft=sc;GLOW_CACHE[key]=sets}
+  if(fg!==flatGlow)return;
+  const soft=document.createElement("canvas");soft.width=sets.soft.width;soft.height=sets.soft.height;soft.getContext("2d").drawImage(sets.soft,0,0);
   const els=fg.querySelectorAll(".glow");const [eSoft,eMain,eSpk]=[els[0],els[1],els[2]];
   const disp=(el,c0)=>{const c=document.createElement("canvas");c.className="gframe";c.width=c0.width;c.height=c0.height;c.getContext("2d").drawImage(c0,0,0);el.appendChild(c);return c};
   soft.className="gframe soft";eSoft.appendChild(soft);
@@ -1047,7 +1054,7 @@ addEventListener("keydown",e=>{if(e.key==="Escape"&&proj.hidden&&!site.hidden)se
 
 
 /* ---------- centre logo: flowing opacity waves (50%–80%) ---------- */
-let shadowCvs=[],logoCv=null,logoW=0,logoSolid=null,haloCv=null,haloP=0,haloAt=0,haloR=0,prox=0,proxT=0;const haloTmp=document.createElement("canvas");
+const LOGO_CACHE={};let shadowCvs=[],logoCv=null,logoW=0,logoSolid=null,haloCv=null,haloP=0,haloAt=0,haloR=0,prox=0,proxT=0;const haloTmp=document.createElement("canvas");
 /* "dissolve" outer glow: blur the logo's silhouette, then keep each pixel only if a random draw falls under its glow strength.
    Pre-made: 8 strength levels x 3 random variants, each computed once on first use, then just flipped through (no live pixel work) */
 const HALO_L=8,HALO_V=3;let haloCache=[],haloLast=-1;
@@ -1076,20 +1083,24 @@ function sizeLogo(){
   const W=logoCv.offsetWidth||parseFloat(getComputedStyle(logoCv).width)||280;
   const dpr=Math.min(2,devicePixelRatio||1);logoW=Math.round(W*dpr);
   logoCv.width=logoW;logoCv.height=Math.round(logoW*logoImg.naturalHeight/logoImg.naturalWidth);
+  /* everything below is one-off work; it is cached per logo size so rebuilding the ring (store switch, resize) reuses it */
+  const LC=LOGO_CACHE[logoW]||(LOGO_CACHE[logoW]={halo:[]});
+  if(LC.solid)logoSolid=LC.solid;else{
   /* solid copy: the artwork's grain is partly transparent, so boost every pixel's alpha for the hover state */
   logoSolid=document.createElement("canvas");logoSolid.width=logoCv.width;logoSolid.height=logoCv.height;
   const sx=logoSolid.getContext("2d");sx.drawImage(logoImg,0,0,logoSolid.width,logoSolid.height);
   const im=sx.getImageData(0,0,logoSolid.width,logoSolid.height),dd=im.data;
   for(let k=0;k<dd.length;k+=4){dd[k]=dd[k+1]=dd[k+2]=255;dd[k+3]=Math.min(255,dd[k+3]*4)}
-  sx.putImageData(im,0,0);
+  sx.putImageData(im,0,0);LC.solid=logoSolid}
   /* the logo's blue glow, blurred once (was two drop-shadow filters recomputed every frame); [rest, hover] */
   if(shadowCvs.length===2){const pad=Math.round(logoW*.16),SH=[[[18,"rgba(0,0,255,.4)"],[3,"rgba(120,120,255,.2)"]],[[22,"rgba(0,0,255,.75)"],[4,"rgba(160,160,255,.4)"]]];
     shadowCvs.forEach((c,i)=>{c.width=logoW+pad*2;c.height=logoCv.height+pad*2;c.style.width=(c.width/dpr)+"px";c.style.height=(c.height/dpr)+"px";
-      const x=c.getContext("2d"),a=i?.7:.6,reps=i?2:1; /* matched by eye to the old chained drop-shadows */
+      const x=c.getContext("2d");if(LC.sh&&LC.sh[i]){x.drawImage(LC.sh[i],0,0);return}const a=i?.7:.6,reps=i?2:1; /* matched by eye to the old chained drop-shadows */
       for(const [r,col] of SH[i]){const t=document.createElement("canvas");t.width=c.width;t.height=c.height;const tx=t.getContext("2d");tx.drawImage(logoSolid,pad,pad);tx.globalCompositeOperation="source-in";tx.fillStyle=col;tx.fillRect(0,0,t.width,t.height);
-        for(let q=0;q<reps;q++){x.save();x.globalAlpha=a;x.filter=`blur(${(r/2*dpr).toFixed(1)}px)`;x.drawImage(t,0,0);x.restore()}}})}
+        for(let q=0;q<reps;q++){x.save();x.globalAlpha=a;x.filter=`blur(${(r/2*dpr).toFixed(1)}px)`;x.drawImage(t,0,0);x.restore()}}
+      const keep=document.createElement("canvas");keep.width=c.width;keep.height=c.height;keep.getContext("2d").drawImage(c,0,0);(LC.sh=LC.sh||[])[i]=keep})}
   /* halo canvas: logo-sized plus padding for the dissolve glow */
-  if(haloCv){haloCache=[];haloLast=-1;haloP=Math.round(logoW*.3);haloCv.width=logoW+haloP*2;haloCv.height=logoCv.height+haloP*2;
+  if(haloCv){haloCache=LC.halo;haloLast=-1;haloP=Math.round(logoW*.3);haloCv.width=logoW+haloP*2;haloCv.height=logoCv.height+haloP*2;
     haloCv.style.width=(haloCv.width/dpr)+"px";haloCv.style.height=(haloCv.height/dpr)+"px";haloTmp.width=haloCv.width;haloTmp.height=haloCv.height}
   return true;
 }
@@ -1144,7 +1155,7 @@ function logoLoop(t){
   lookX+=(lookTX-lookX)*.08;lookY+=(lookTY-lookY)*.08;
   if(logoCv){const tf=`perspective(700px) rotateY(${(lookX*14).toFixed(2)}deg) rotateX(${(-lookY*10).toFixed(2)}deg)`;logoCv.style.transform=tf;if(haloCv)haloCv.style.transform=tf+" translateZ(-6px)";for(const c of shadowCvs)c.style.transform=tf+" translateZ(-3px)";if(shadowCvs[1])shadowCvs[1].style.opacity=logoHov.toFixed(3)}
   drawHalo(t);
-  if(!pageHidden&&t-lastLogo>15){lastLogo=t;logoHov+=(logoHovT-logoHov)*.18;if(Math.abs(logoHovT-logoHov)<.005)logoHov=logoHovT;drawLogo(t)}requestAnimationFrame(logoLoop)}
+  if(!pageHidden&&t-lastLogo>31){lastLogo=t;logoHov+=(logoHovT-logoHov)*.18;if(Math.abs(logoHovT-logoHov)<.005)logoHov=logoHovT;drawLogo(t)}requestAnimationFrame(logoLoop)}
 logoImg.onload=()=>{logoW=0;drawLogo(reduce?0:performance.now());requestAnimationFrame(logoLoop)};
 
 /* ---------- dock ---------- */

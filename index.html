@@ -28,6 +28,10 @@
 .tl.red{background:#ff5f57}.tl.amber{background:#febc2e}.tl.green{background:#28c840}
 .tl::after{content:"";position:absolute;inset:0;display:grid;place-items:center;opacity:0;font:700 9px/12px var(--body);color:rgba(0,0,0,.55);text-align:center}
 .lights:hover .tl.red::after{content:"×";opacity:1}.lights:hover .tl.amber::after{content:"–";opacity:1}.lights:hover .tl.green::after{content:"+";opacity:1}
+.tvchannel{flex:none;align-self:center;margin:0 0 clamp(18px,3.5vh,32px);padding:9px 16px;border:1px solid rgba(255,255,255,.18);border-radius:999px;
+  font:500 13px/1 var(--body);color:rgba(255,255,255,.75);text-decoration:none;transition:background .2s,color .2s,border-color .2s}
+.tvchannel strong{color:#fff;font-weight:600}
+.tvchannel:hover,.tvchannel:focus-visible{background:#ff0033;border-color:#ff0033;color:#fff}
 .tvwin .shows-row{flex:1;min-height:0;justify-content:center;align-items:center;padding:clamp(28px,5vh,64px) clamp(20px,4vw,56px) clamp(32px,6vh,72px)}
 .shows-head{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:18px max(20px,env(safe-area-inset-left,0px))}
 .shows-kicker{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
@@ -511,6 +515,7 @@ dd{margin:0;font-size:15px}
       <span class="cap"><span class="ch">CH 02</span><strong>Tópicos</strong><span class="go">Watch on YouTube ↗</span></span>
     </a>
   </div>
+  <a class="tvchannel" href="https://www.youtube.com/@byGRAINyt" target="_blank" rel="noopener">Subscribe to <strong>@byGRAINyt</strong> on YouTube ↗</a>
   </div>
 </section>
 <nav id="dock" aria-label="Links">
@@ -710,7 +715,7 @@ const PT={
 /* screen-reader labels */
 "byGrain©, open menu":"byGrain©, abrir menu","byGrain© merch store":"Loja de merch byGrain©","Leave the store":"Sair da loja",
 "Finder, open releases":"Finder, abrir lançamentos","Mail, contact us":"Mail, contactar","Settings, meet the team":"Definições, conhecer a equipa",
-"Sections":"Secções","YouTube, byGrain© shows":"YouTube, séries byGrain©","byGrain© TV":"byGrain© TV","Minimise":"Minimizar","Zoom":"Ampliar","byGrain© shows":"Séries byGrain©","Crew":"Equipa","Artists and brands we have worked with":"Artistas e marcas com quem trabalhámos","Links":"Ligações",
+"Sections":"Secções","YouTube, byGrain© shows":"YouTube, séries byGrain©","byGrain© TV":"byGrain© TV","Minimise":"Minimizar","Subscribe to":"Subscreve","on YouTube ↗":"no YouTube ↗","Zoom":"Ampliar","byGrain© shows":"Séries byGrain©","Crew":"Equipa","Artists and brands we have worked with":"Artistas e marcas com quem trabalhámos","Links":"Ligações",
 "Project ring. Drag, scroll or use arrow keys to rotate; select a frame to open its project.":"Anel de projetos. Arrasta, faz scroll ou usa as setas para rodar; escolhe uma imagem para abrir o projeto."
 };
 const ROLE_PT={"Director":"Realização","Directors":"Realização","Director & editor":"Realização e montagem","Cinematography":"Direção de fotografia","DoP":"Direção de fotografia",

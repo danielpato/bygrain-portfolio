@@ -806,7 +806,7 @@ function build(){
     /* organic scatter: every frame the same height at its own ratio, placed one by one at a jittered spot around the
        ring and a random height, never overlapping another frame; no columns, so frames drift, stagger and sometimes stack */
     const ars=LIST.map(pi=>arOf(PROJECTS[pi])),C=2*Math.PI*R,sumAR=ars.reduce((a,b)=>a+b,0);
-    const FH=Math.min(H*(narrow?.4:.44),C*1.02/sumAR),band=H*1.3,G=gap*1.4;
+    const FH=Math.min(H*(narrow?.4:.44),C*.76/sumAR),band=FH*1.7,G=gap*1.1; /* one gently staggered row: heights vary a little, everything stays on screen at full zoom */
     let fails=0;const angDist=(a,b)=>{let d=Math.abs(a-b)%C;return Math.min(d,C-d)};
     for(let k=0;k<N;k++){
       const w=FH*ars[k],slot=(k+.5)/N*C;let best=null;
@@ -816,7 +816,7 @@ function build(){
         const ok=placed.every(q=>angDist(x,q.x)>=(w+q.w)/2+G||Math.abs(y-q.yc)>=FH+G);
         if(ok){best={x,y};break}
       }
-      if(!best){fails++;best={x:slot,y:(k%2?1:-1)*(FH*.6)}}
+      if(!best){fails++;best={x:slot,y:0}}
       placed.push({x:best.x,y:best.y-FH/2,yc:best.y,w,h:FH,dz:(r()-.4)*R*.05});
     }
   }

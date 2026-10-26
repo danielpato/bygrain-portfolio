@@ -154,7 +154,9 @@ html.store .gscope .halo,html.store #flatGlow{opacity:0}
 #brand img{display:block;height:20px;width:auto;filter:drop-shadow(0 0 8px rgba(0,0,255,.5))}
 #site{position:fixed;inset:0;z-index:36;overflow-y:auto;overscroll-behavior:contain;background:color-mix(in srgb,var(--ink) 90%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);padding-top:env(safe-area-inset-top,0px);opacity:0;transition:opacity .4s}
 #site.open{opacity:1}
-.site-nav{display:flex;justify-content:flex-end;gap:20px;padding-block:20px 0}
+/* the menu bar (with Close) stays pinned to the top while the menu scrolls, so there is always a way out */
+.site-nav{display:flex;justify-content:flex-end;align-items:center;gap:20px;padding-block:14px;position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--ink) 82%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.site-close{padding:6px 12px!important;margin-left:8px!important;border:1px solid var(--line)!important;border-radius:999px!important;color:var(--paper)!important}
 .site-nav a{text-decoration:none;font-size:14px;color:var(--mute)}
 .site-nav a:hover,.site-close:hover{color:var(--paper)}
 .site-close{background:none;border:0;padding:0;margin-left:12px;font:inherit;font-size:14px;color:var(--mute);cursor:pointer}

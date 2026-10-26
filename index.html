@@ -66,6 +66,9 @@
 @media (prefers-reduced-motion:reduce){.show,#shows.open .screen{animation:none!important}}
 /* the TV view is always the dark room, also when opened from the store */
 html.store #shows{--ink:#0b0b10;--paper:#f2f2f2;--mute:rgba(242,242,242,.55);--line:rgba(255,255,255,.16);color:#f2f2f2}
+
+/* behind the logo: just white grain speckles (the blue haze and blue grain layers are switched off) */
+#flatGlow .glow:not(.specks){display:none!important}
 </style>
 <style>
 /* menu headline: original big-type layout, smaller lines around byGrain©, description flush right */
@@ -230,7 +233,7 @@ html.store #core .word,html.store #core .word:hover,html.store #core .word:focus
 #core .wshadow{position:absolute;left:50%;top:50%;translate:-50% -50%;pointer-events:none;max-width:none;transition:opacity .7s ease}
 #core .wshadow.hov{opacity:0;transition:none}
 html.store #core .wshadow{opacity:0!important}
-.gscope .glow.specks{background:radial-gradient(closest-side,rgba(110,110,255,.95),rgba(0,0,255,.6) 50%,rgba(0,0,255,0) 90%);-webkit-mask:var(--specks);mask:var(--specks);-webkit-mask-size:260px;mask-size:260px;animation:breathe 6s ease-in-out infinite,grain .45s steps(1) infinite reverse}
+.gscope .glow.specks{background:radial-gradient(closest-side,rgba(255,255,255,.85),rgba(255,255,255,.45) 50%,rgba(255,255,255,0) 90%);-webkit-mask:var(--specks);mask:var(--specks);-webkit-mask-size:260px;mask-size:260px;animation:breathe 6s ease-in-out infinite,grain .45s steps(1) infinite reverse}
 .gscope.hires .glow{-webkit-mask-image:var(--noise-hi);mask-image:var(--noise-hi)}
 .gscope.hires .glow.specks{-webkit-mask-image:var(--specks-hi);mask-image:var(--specks-hi)}
 .gscope.hires .glow.soft{-webkit-mask-image:none;mask-image:none}
@@ -884,7 +887,7 @@ async function bakeGlow(fg){
   const cw=Math.round(W*k),ch=Math.round(H*k);
   const grad=(x,stops)=>{const g=x.createRadialGradient(cw/2,cw/2,0,cw/2,cw/2,cw/2);stops.forEach(([o,c])=>g.addColorStop(o,c));return g};
   const ell=(x,stops)=>{x.save();x.setTransform(1,0,0,ch/cw,0,ch/2-cw/2*ch/cw);x.fillStyle=grad(x,stops);x.fillRect(0,0,cw,cw);x.restore()};
-  const MAIN=[[0,"rgba(40,40,255,.45)"],[.45,"rgba(0,0,255,.22)"],[1,"rgba(0,0,255,0)"]],SPK=[[0,"rgba(110,110,255,.95)"],[.5,"rgba(0,0,255,.6)"],[.9,"rgba(0,0,255,0)"],[1,"rgba(0,0,255,0)"]];
+  const MAIN=[[0,"rgba(40,40,255,.45)"],[.45,"rgba(0,0,255,.22)"],[1,"rgba(0,0,255,0)"]],SPK=[[0,"rgba(255,255,255,.85)"],[.5,"rgba(255,255,255,.45)"],[.9,"rgba(255,255,255,0)"],[1,"rgba(255,255,255,0)"]]; /* white speckles only */
   const make=async(noiseVar,tile,stops,idx)=>{const img=await loadImg(urlOf(fg.style.getPropertyValue(noiseVar)));if(!img)return null;
     /* render the noise at its on-screen tile size (as the CSS mask did) rather than stretching a small bitmap */
     const tileC=document.createElement("canvas");tileC.width=tileC.height=Math.round(tile*k);tileC.getContext("2d").drawImage(img,0,0,tileC.width,tileC.height);
@@ -907,7 +910,6 @@ async function bakeGlow(fg){
   const dMain=disp(eMain,sets.lo.main[0]),dSpk=disp(eSpk,sets.lo.spk[0]);fg.classList.add("baked");glowSets=sets;
   let a=0,b=0;const show=(d,c)=>{const x=d.getContext("2d");x.clearRect(0,0,d.width,d.height);x.drawImage(c,0,0,d.width,d.height)};
   const pick=()=>(zoom>1.2&&sets.hi)?sets.hi:sets.lo;
-  glowTimers.push(setInterval(()=>{if(frozen||document.hidden)return;const S=pick();a=(a+1)%S.main.length;show(dMain,S.main[a])},150));
   glowTimers.push(setInterval(()=>{if(frozen||document.hidden)return;const S=pick();b=(b+1)%S.spk.length;show(dSpk,S.spk[b])},112));
 }
 /* sharper grain when zoomed in: built once, the first time someone zooms */

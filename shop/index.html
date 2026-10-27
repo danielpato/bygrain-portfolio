@@ -69,6 +69,9 @@ html.store #shows{--ink:#0b0b10;--paper:#f2f2f2;--mute:rgba(242,242,242,.55);--l
 
 /* behind the logo: just white grain speckles (the blue haze and blue grain layers are switched off) */
 #flatGlow .glow:not(.specks){display:none!important}
+
+/* no blue glow around the logo */
+#core .wshadow{display:none!important}
 </style>
 <style>
 /* menu headline: original big-type layout, smaller lines around byGrain©, description flush right */
@@ -1186,7 +1189,7 @@ function drawHalo(now){
   const L=haloLevel(Math.round(prox*(HALO_L-1))),W=haloCv.width,H=haloCv.height,h=haloCv.getContext("2d");
   if(!haloBuf||haloBuf.width!==W||haloBuf.height!==H)haloBuf=h.createImageData(W,H);
   const u=new Uint32Array(haloBuf.data.buffer),dark=store;u.fill(0);
-  const rgb=dark?0:(255<<16)|(165<<8)|150; /* ABGR in memory: blue 255, green 165, red 150 */
+  const rgb=dark?0:(240<<16)|(240<<8)|240; /* white speckles (black in the store) */
   for(let k=0,n=L.idx.length;k<n;k++){const a=L.a[k];if(Math.random()<a)u[L.idx[k]]=((140+115*a)<<24)|rgb}
   h.putImageData(haloBuf,0,0);
 }const logoImg=new Image();logoImg.src=LOGO;

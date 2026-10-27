@@ -1176,11 +1176,7 @@ function haloLevel(lv){
   for(let k=0;k<2;k++)t.drawImage(logoSolid,haloP,haloP,logoCv.width,logoCv.height);
   t.filter="none";
   const d=t.getImageData(0,0,W,H).data,gain=.44+.34*p,edge=haloP*.45,idx=[],al=[];
-  /* keep a thin clear margin around the letters so the speckles never eat into the logo's edges */
-  t.clearRect(0,0,W,H);t.filter=`blur(${(logoCv.width/300).toFixed(1)}px)`;t.drawImage(logoSolid,haloP,haloP,logoCv.width,logoCv.height);t.filter="none";
-  const keep=t.getImageData(0,0,W,H).data;
   for(let i=0,n=W*H;i<n;i++){const px=i%W,py=i/W|0,e=Math.min(1,Math.min(px,py,W-1-px,H-1-py)/edge); /* fade out before the canvas edge */
-    if(keep[i*4+3]>8)continue;
     const a=d[i*4+3]/255*gain*e*e;if(a>.004){idx.push(i);al.push(a)}}
   return haloCache[lv]={idx:Uint32Array.from(idx),a:Float32Array.from(al)};
 }

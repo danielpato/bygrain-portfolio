@@ -907,13 +907,11 @@ const GLOW_POS=[[0,0],[-47,23],[61,-38],[-19,-71],[88,54],[-73,9],[31,82],[-102,
 const urlOf=v=>{const m=/url\("?(.*?)"?\)$/.exec(v.trim().replace(/\\"/g,'"'));return m?m[1].replace(/\\"/g,'"'):""};
 function loadImg(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src})}
 let glowTimers=[],glowSets=null;const GLOW_CACHE={};
-/* same density as the soft speckle noise, but every speck is a crisp square dot on whole device pixels */
-function crispSpecks(src,k){const W=src.width,H=src.height,d=src.getContext("2d").getImageData(0,0,W,H).data;
-  let lit=0;for(let i=3;i<d.length;i+=4)if(d[i]>40)lit++;
+/* film grain like the logo's own: every device pixel gets a random chance of a speck with a random strength
+   (same recipe as the logo grain tiles), so it reads as fine, dense grain rather than scattered dots */
+function crispSpecks(src,k){const W=src.width,H=src.height;
   const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d"),im=x.createImageData(W,H),o=im.data;
-  const px=Math.max(1,Math.round(k*.9)),n=Math.round(lit/(px*px)*.55);
-  for(let j=0;j<n;j++){const sz=Math.random()<.18?px+1:px,cx=(Math.random()*(W-sz))|0,cy=(Math.random()*(H-sz))|0,a=170+((Math.random()*85)|0);
-    for(let yy=0;yy<sz;yy++)for(let xx=0;xx<sz;xx++){const q=((cy+yy)*W+cx+xx)*4;o[q]=o[q+1]=o[q+2]=0;o[q+3]=a}}
+  for(let q=0;q<o.length;q+=4){const r=Math.random();o[q]=o[q+1]=o[q+2]=0;o[q+3]=r>.55?Math.round(((r-.55)/.45)**1.4*255):0}
   x.putImageData(im,0,0);return c}
 async function bakeGlow(fg){
   glowTimers.forEach(clearInterval);glowTimers=[];glowSets=null;
@@ -922,7 +920,7 @@ async function bakeGlow(fg){
   const cw=Math.round(W*k),ch=Math.round(H*k);
   const grad=(x,stops)=>{const g=x.createRadialGradient(cw/2,cw/2,0,cw/2,cw/2,cw/2);stops.forEach(([o,c])=>g.addColorStop(o,c));return g};
   const ell=(x,stops)=>{x.save();x.setTransform(1,0,0,ch/cw,0,ch/2-cw/2*ch/cw);x.fillStyle=grad(x,stops);x.fillRect(0,0,cw,cw);x.restore()};
-  const MAIN=[[0,"rgba(40,40,255,.45)"],[.45,"rgba(0,0,255,.22)"],[1,"rgba(0,0,255,0)"]],SPK=[[0,"rgba(255,255,255,.85)"],[.5,"rgba(255,255,255,.45)"],[.9,"rgba(255,255,255,0)"],[1,"rgba(255,255,255,0)"]]; /* white speckles only */
+  const MAIN=[[0,"rgba(40,40,255,.45)"],[.45,"rgba(0,0,255,.22)"],[1,"rgba(0,0,255,0)"]],SPK=[[0,"rgba(255,255,255,.42)"],[.5,"rgba(255,255,255,.2)"],[.9,"rgba(255,255,255,0)"],[1,"rgba(255,255,255,0)"]]; /* soft white film grain, weaker than the logo */
   const make=async(noiseVar,tile,stops,idx)=>{const img=await loadImg(urlOf(fg.style.getPropertyValue(noiseVar)));if(!img)return null;
     /* render the noise at its on-screen tile size (as the CSS mask did) rather than stretching a small bitmap */
     let tileC=document.createElement("canvas");tileC.width=tileC.height=Math.round(tile*k);tileC.getContext("2d").drawImage(img,0,0,tileC.width,tileC.height);

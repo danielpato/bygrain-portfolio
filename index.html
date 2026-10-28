@@ -96,6 +96,8 @@ html.noanim *,html.noanim *::before,html.noanim *::after{transition:none!importa
 html.storewin.store body{background:var(--ink)}
 
 /* the grain copy over the back of the ring: same spot as #flatGlow, visible only across the top part */
+/* test: only the copy over the ring is shown (the grain behind the ring is hidden) */
+#flatGlow .glow{visibility:hidden}
 #glowFront{position:absolute;left:50%;top:43%;width:0;height:0;pointer-events:none;opacity:1;transition:opacity .7s ease}
 #glowFront .glow{-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 20%,transparent 36%)!important;mask-image:linear-gradient(to bottom,#000 0%,#000 20%,transparent 36%)!important}
 html.store #glowFront,html.noglow #glowFront{opacity:0}
@@ -964,7 +966,7 @@ async function bakeGlow(fg){
   ring.after(ov);fg.classList.add("baked");glowSets=sets;
   let a=0,b=0;const show=(d,c)=>{const x=d.getContext("2d");x.clearRect(0,0,d.width,d.height);x.drawImage(c,0,0,d.width,d.height)};
   const pick=()=>(zoom>1.2&&sets.hi)?sets.hi:sets.lo;
-  glowTimers.push(setInterval(()=>{if(frozen||document.hidden)return;const S=pick();b=(b+1)%S.spk.length;show(dSpk,S.spk[b]);show(dOv,S.spk[b])},170)); /* calmer flicker */
+  glowTimers.push(setInterval(()=>{if(frozen||document.hidden)return;const S=pick();b=(b+1)%S.spk.length;show(dOv,S.spk[b])},170)); /* calmer flicker */
 }
 /* sharper grain when zoomed in: built once, the first time someone zooms */
 let glowHiBusy=false;

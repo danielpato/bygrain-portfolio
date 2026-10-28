@@ -920,7 +920,7 @@ let glowTimers=[],glowSets=null;const GLOW_CACHE={};
    (same recipe as the logo grain tiles), so it reads as fine, dense grain rather than scattered dots */
 function crispSpecks(src,k){const W=src.width,H=src.height;
   const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d"),im=x.createImageData(W,H),o=im.data;
-  for(let q=0;q<o.length;q+=4){const r=Math.random();o[q]=o[q+1]=o[q+2]=0;o[q+3]=r>.55?Math.round(((r-.55)/.45)**1.4*255):0}
+  for(let q=0;q<o.length;q+=4){const r=Math.random();o[q]=o[q+1]=o[q+2]=0;o[q+3]=r>.8?Math.round(((r-.8)/.2)**1.4*255):0} /* sparser: about a fifth of pixels carry grain */
   x.putImageData(im,0,0);return c}
 async function bakeGlow(fg){
   glowTimers.forEach(clearInterval);glowTimers=[];glowSets=null;
@@ -953,7 +953,7 @@ async function bakeGlow(fg){
   const dMain=disp(eMain,sets.lo.main[0]),dSpk=disp(eSpk,sets.lo.spk[0]);fg.classList.add("baked");glowSets=sets;
   let a=0,b=0;const show=(d,c)=>{const x=d.getContext("2d");x.clearRect(0,0,d.width,d.height);x.drawImage(c,0,0,d.width,d.height)};
   const pick=()=>(zoom>1.2&&sets.hi)?sets.hi:sets.lo;
-  glowTimers.push(setInterval(()=>{if(frozen||document.hidden)return;const S=pick();b=(b+1)%S.spk.length;show(dSpk,S.spk[b])},112));
+  glowTimers.push(setInterval(()=>{if(frozen||document.hidden)return;const S=pick();b=(b+1)%S.spk.length;show(dSpk,S.spk[b])},170)); /* calmer flicker */
 }
 /* sharper grain when zoomed in: built once, the first time someone zooms */
 let glowHiBusy=false;

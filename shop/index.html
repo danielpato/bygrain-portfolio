@@ -76,7 +76,7 @@ html.store #shows{--ink:#0b0b10;--paper:#f2f2f2;--mute:rgba(242,242,242,.55);--l
 /* ---------- byGrain© Store: the merch ring shown inside a macOS window ---------- */
 #shopwin{position:fixed;inset:16px 16px 100px;z-index:1;display:block;padding:0;background:none;opacity:0;transition:opacity .45s ease;pointer-events:none}
 #shopwin.open{opacity:1}
-#shopwin .shopw{position:absolute;inset:0;width:auto;height:auto;max-height:none;background:#f4f3ef;border:1px solid rgba(0,0,0,.14);box-shadow:0 0 0 .5px rgba(0,0,0,.8),0 30px 90px rgba(0,0,0,.6);transform:translateY(14px) scale(.97)}
+#shopwin .shopw{position:absolute;inset:0;width:auto;height:auto;max-height:none;background:#f4f3ef;background-clip:padding-box;border:1px solid rgba(255,255,255,.14); /* same edge as the YouTube window: the light body no longer shows through the border around the dark bar */box-shadow:0 0 0 .5px rgba(0,0,0,.8),0 30px 90px rgba(0,0,0,.6);transform:translateY(14px) scale(.97)}
 #shopwin.open .shopw{transform:none}
 #shopwin .tvbar{pointer-events:auto} /* same dark title bar as the YouTube window */
 html.storewin.store body{background:var(--ink)}

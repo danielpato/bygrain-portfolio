@@ -85,6 +85,14 @@ html.storewin #stage{inset:55px 17px 101px;margin-top:0;border-radius:0 0 13px 1
 html.storewin.storemax #shopwin{inset:0 0 92px}
 html.storewin.storemax #stage{inset:39px 1px 93px}
 @media (max-width:820px){#shopwin{inset:10px 10px 92px}html.storewin #stage{inset:49px 11px 93px}html.storewin #lang{display:none}}
+
+/* store window pops instantly; the frozen main ring sits behind it */
+html.noanim *,html.noanim *::before,html.noanim *::after{transition:none!important}
+#shopwin,#shopwin .shopw{transition:none!important}
+#shopwin .shopw{transform:none!important}
+#stageFreeze{position:fixed;inset:0;margin-top:8px;overflow:hidden;perspective-origin:50% 30%;pointer-events:none;z-index:0}
+#stageFreeze .card video{display:none}
+html.storewin.store body{background:var(--ink)}
 </style>
 <style>
 /* menu headline: original big-type layout, smaller lines around byGrain©, description flush right */
@@ -1375,17 +1383,52 @@ function setStore(v){
 }
 /* the store: the merch ring, presented inside a macOS window */
 const shopEl=document.getElementById("shopwin");
+/* Opening the store pops its window straight up, ring already in place and spinning; no intro or outro.
+   The main ring stays visible behind it as a frozen snapshot (its videos and spin stop), and comes back exactly
+   where it was when the store closes. */
+let mainSnap=null,mainState=null;
+function snapshotStage(){
+  const cl=stage.cloneNode(true);cl.id="stageFreeze";cl.removeAttribute("tabindex");cl.setAttribute("aria-hidden","true");
+  /* id-based styles (#ring, #core, #flatGlow…) are copied inline before the ids are dropped from the copy */
+  const so=[...stage.querySelectorAll("[id]")],co=[...cl.querySelectorAll("[id]")];
+  so.forEach((e,i)=>{const cs=getComputedStyle(e),d=co[i];if(!d)return;for(const p of ["position","left","top","right","bottom","width","height","transform-style","transform-origin","perspective","opacity"])d.style.setProperty(p,cs.getPropertyValue(p));d.removeAttribute("id")});
+  const src=[...stage.querySelectorAll("canvas")],dst=[...cl.querySelectorAll("canvas")];
+  src.forEach((c,i)=>{const d=dst[i];if(!d||!c.width)return;d.width=c.width;d.height=c.height;try{d.getContext("2d").drawImage(c,0,0)}catch(e){}});
+  cl.querySelectorAll("video").forEach(v=>v.remove());cl.querySelectorAll(".card").forEach(c=>c.classList.remove("live"));
+  /* the logo and the grain behind it are 3D/id-styled, so they are re-placed flat, as pictures at their on-screen spots */
+  cl.querySelectorAll(".gscope,#core,.halo,.word,.wshadow").forEach(e=>{if(e.closest(".card"))return;e.remove()});
+  const sr=stage.getBoundingClientRect(),flat=(cv,extra)=>{if(!cv||!cv.width)return;const r=cv.getBoundingClientRect(),c=document.createElement("canvas");c.width=cv.width;c.height=cv.height;
+    try{c.getContext("2d").drawImage(cv,0,0)}catch(e){return}
+    c.style.cssText=`position:absolute;left:${r.left-sr.left}px;top:${r.top-sr.top}px;width:${r.width}px;height:${r.height}px;pointer-events:none;${extra||""}`;cl.appendChild(c)};
+  if(flatGlow)flatGlow.querySelectorAll(".glow.specks canvas").forEach(c=>flat(c));
+  flat(haloCv);flat(logoCv);
+  return cl}
 function setShop(v){
-  if(v===document.documentElement.classList.contains("storewin")&&v===store)return;
-  if(v){if(!site.hidden)setSite(false);if(!proj.hidden)closeProject();if(!showsEl.hidden)setShows(false);
-    shopEl.hidden=false;document.documentElement.classList.add("storewin");requestAnimationFrame(()=>requestAnimationFrame(()=>shopEl.classList.add("open")))}
-  else{shopEl.classList.remove("open");setTimeout(()=>{if(!shopEl.classList.contains("open")){shopEl.hidden=true;document.documentElement.classList.remove("storewin","storemax");build()}},reduce?0:450)}
-  setStore(v);
+  const root=document.documentElement;
+  if(v===root.classList.contains("storewin"))return;
+  root.classList.add("noanim");setTimeout(()=>root.classList.remove("noanim"),80);
+  if(v){
+    if(!site.hidden)setSite(false);if(!proj.hidden)closeProject();if(!showsEl.hidden)setShows(false);
+    mainState={angle,tilt,zoom,zoomT,vel};
+    for(const c of cards)if(c.vid){c.vid.pause();c.live=false}
+    mainSnap=snapshotStage();stage.parentNode.insertBefore(mainSnap,stage);
+    root.classList.add("storewin","store");shopEl.hidden=false;shopEl.classList.add("open");
+    store=true;zoom=zoomT=1;angle=0;tilt=TILT;vel=auto;build();opened=true;reveal=1;setOpen(true);render();
+  }else{
+    shopEl.classList.remove("open");shopEl.hidden=true;root.classList.remove("storewin","storemax","store");
+    if(mainSnap){mainSnap.remove();mainSnap=null}
+    store=false;build();opened=true;reveal=1;setOpen(true);
+    if(mainState){angle=mainState.angle;tilt=mainState.tilt;zoom=mainState.zoom;zoomT=mainState.zoomT;vel=mainState.vel;mainState=null}
+    render();
+  }
+  storeBtn.classList.toggle("on",v);storeBtn.setAttribute("aria-pressed",v);
+  storeBtn.querySelector(".dock-tip").textContent=v?"byGrain©":T("Store");storeBtn.setAttribute("aria-label",T(v?"Leave the store":"byGrain© merch store"));
+  if(typeof LIVE_URLS!=="undefined"&&LIVE_URLS)history.replaceState(null,"",v?"/shop":"/");
 }
-storeBtn.addEventListener("click",e=>{e.preventDefault();setShop(!store)});
+storeBtn.addEventListener("click",e=>{e.preventDefault();setShop(!document.documentElement.classList.contains("storewin"))});
 document.getElementById("shopClose").onclick=()=>setShop(false);
 document.getElementById("shopMin").onclick=()=>setShop(false);
-document.getElementById("shopMax").onclick=()=>{document.documentElement.classList.toggle("storemax");setTimeout(build,60)};
+document.getElementById("shopMax").onclick=()=>{document.documentElement.classList.toggle("storemax");requestAnimationFrame(()=>{build();opened=true;reveal=1;setOpen(true);render()})};
 /* bygrain.com/shop opens straight into store mode; the address follows the mode on the live site */
 const LIVE_URLS=location.protocol.startsWith("http")&&SEND_FORM;
 if(LIVE_URLS&&/^\/shop\/?$/.test(location.pathname))setTimeout(()=>setShop(true),600);

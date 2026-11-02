@@ -101,6 +101,12 @@ html.storewin.store body{background:var(--ink)}
 #glowFront{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;opacity:1;transition:opacity .7s ease;transform:translateZ(-8px);transform-style:preserve-3d}
 
 html.store #glowFront,html.noglow #glowFront{opacity:0}
+
+/* sparse film grain over the whole black background of the main view (3 pre-made tiles, cross-cut every ~0.2s) */
+#bgGrain{position:fixed;inset:0;pointer-events:none;z-index:0}
+#bgGrain i{position:absolute;inset:0;background-size:256px 256px;opacity:0;will-change:opacity}
+#bgGrain i.on{opacity:1}
+html.store #bgGrain,html.storewin #bgGrain{display:none}
 </style>
 <style>
 /* menu headline: original big-type layout, smaller lines around byGrain©, description flush right */
@@ -1447,6 +1453,15 @@ document.getElementById("shopMax").onclick=()=>{document.documentElement.classLi
 const LIVE_URLS=location.protocol.startsWith("http")&&SEND_FORM;
 if(LIVE_URLS&&/^\/shop\/?$/.test(location.pathname))setTimeout(()=>setShop(true),600);
 addEventListener("keydown",e=>{if(e.key==="Escape"&&store&&proj.hidden&&site.hidden)setShop(false)});
+/* sparse background grain */
+(function(){const g=document.createElement("div");g.id="bgGrain";g.setAttribute("aria-hidden","true");
+  const dpr=Math.min(2,devicePixelRatio||1),T=Math.round(256*dpr);
+  for(let n=0;n<3;n++){const c=document.createElement("canvas");c.width=c.height=T;const x=c.getContext("2d"),im=x.createImageData(T,T),d=im.data;
+    for(let q=0;q<d.length;q+=4){const r=Math.random();if(r>.985){d[q]=d[q+1]=d[q+2]=255;d[q+3]=Math.round(40+((r-.985)/.015)*90)}}
+    x.putImageData(im,0,0);const i=document.createElement("i");i.style.backgroundImage=`url(${c.toDataURL()})`;if(!n)i.className="on";g.appendChild(i)}
+  stage.parentNode.insertBefore(g,stage);
+  if(reduce)return;let k=0;const L=g.children;
+  setInterval(()=>{if(frozen||document.hidden||store)return;L[k].classList.remove("on");k=(k+1)%3;L[k].classList.add("on")},190)})();
 /* boot */
 let pageHidden=document.hidden;document.addEventListener("visibilitychange",()=>{pageHidden=document.hidden;render()});
 build();setOpen(true);requestAnimationFrame(loop);applyLang();
